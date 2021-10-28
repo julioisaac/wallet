@@ -1,10 +1,12 @@
-package wallet
+package daxxer_api
 
 import (
 	"github.com/julioisaac/daxxer-api/routers"
 	"github.com/julioisaac/daxxer-api/routers/gin"
+	"github.com/julioisaac/daxxer-api/src/helpers/ticker"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/controller"
 	currencies "github.com/julioisaac/daxxer-api/src/wallet/currencies/controller"
+	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
 	"github.com/julioisaac/daxxer-api/storage"
 	"github.com/julioisaac/daxxer-api/storage/mongodb"
 )
@@ -12,14 +14,17 @@ import (
 var (
 	dbConfig   storage.DBConfig = mongodb.NewMongoConfig()
 	httpRouter routers.Router   = gin.NewGinRouter()
-
-	accountController                                   = controller.NewAccountController()
+	daxxerTicker      = ticker.NewDaxxerTicker()
+	pricesApiService  = service.NewApiService()
+	accountController = controller.NewAccountController()
 	currencyController       currencies.CurrencyHandler = currencies.NewCurrencyController()
 	cryptoCurrencyController currencies.CurrencyHandler = currencies.NewCryptoCurrencyController()
 )
 
 func main() {
 	dbConfig.Init()
+
+	daxxerTicker.Run(1, pricesApiService.Update)
 
 	httpRouter.POST("/create", accountController.Create)
 	httpRouter.POST("/deposit", accountController.Deposit)
