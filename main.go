@@ -1,4 +1,4 @@
-package daxxer_api
+package main
 
 import (
 	"github.com/julioisaac/daxxer-api/routers"
