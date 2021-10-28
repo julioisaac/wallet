@@ -1,11 +1,11 @@
-package server
+package mux
 
 import (
 	"fmt"
+	"github.com/julioisaac/daxxer-api/routers"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/julioisaac/daxxer-api/cmd"
 )
 
 type muxRouter struct{}
@@ -14,7 +14,7 @@ var (
 	muxDispatcher = mux.NewRouter()
 )
 
-func NewMuxRouter() cmd.Router {
+func NewMuxRouter() routers.Router {
 	return &muxRouter{}
 }
 

@@ -1,9 +1,9 @@
-package mongo
+package mongodb
 
 import (
 	"context"
 	"fmt"
-	"github.com/julioisaac/daxxer-api/internal/database"
+	"github.com/julioisaac/daxxer-api/storage"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
@@ -17,7 +17,7 @@ type Database struct {
 
 var DB *Database
 
-func NewMongoConfig() database.DBConfig {
+func NewMongoConfig() storage.DBConfig {
 	return &mongoConfig{}
 }
 
