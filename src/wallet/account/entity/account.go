@@ -2,6 +2,7 @@ package entity
 
 import (
 	"errors"
+	"fmt"
 	"github.com/julioisaac/daxxer-api/src/helpers/utils"
 	"math"
 )
@@ -27,6 +28,31 @@ func (account *Account) Deposit(amount Amount) (*Account, error) {
 		}
 	} else {
 		account.Amounts = append(account.Amounts, amount)
+	}
+
+	return account, nil
+}
+
+func (account *Account) Withdraw(amount Amount) (*Account, error) {
+	if math.Signbit(amount.Value) || amount.Value == 0 {
+		return nil, errors.New("value cannot be zero or negative")
+	}
+	if len(account.Amounts) > 0 {
+		if account.contains(amount.Currency) {
+			for i, am := range account.Amounts {
+				if am.Currency == amount.Currency {
+					if amount.Value > account.Amounts[i].Value {
+						err := fmt.Errorf("insufficient %s funds", amount.Currency)
+						return nil, err
+					}
+					account.Amounts[i].Value = utils.DecimalMaths().Sub(account.Amounts[i].Value, amount.Value)
+				}
+			}
+		} else {
+			return nil, fmt.Errorf("there is no %s amount", amount.Currency)
+		}
+	} else {
+		return nil, errors.New("there is no amounts")
 	}
 
 	return account, nil

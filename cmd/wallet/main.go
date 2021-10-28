@@ -20,6 +20,7 @@ func main() {
 
 	httpRouter.POST("/create", accountController.Create)
 	httpRouter.POST("/deposit", accountController.Deposit)
+	httpRouter.POST("/withdraw", accountController.Withdraw)
 
 	httpRouter.SERVE(":8000")
 }

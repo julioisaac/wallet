@@ -44,6 +44,22 @@ func (s *service) Deposit(transaction *entity.Transaction) error {
 	return nil
 }
 
+func (s *service) Withdraw(transaction *entity.Transaction) error {
+	var account = entity.Account{}
+	transaction.Type = "withdraw"
+	var query = `{"username": "`+transaction.UserName+`"}`
+	err := accountRepo.FindOne(query, &account)
+	if err != nil {
+		return errors.New("account not found")
+	}
+	err1 := execTransaction(account.Withdraw, transaction)
+	if err1 != nil {
+		return err1
+	}
+
+	return nil
+}
+
 func execTransaction(operation func(entity.Amount) (*entity.Account, error), transaction *entity.Transaction) error {
 	account, err := operation(transaction.Amount)
 	if err != nil {
