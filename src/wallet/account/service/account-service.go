@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
+	"github.com/julioisaac/daxxer-api/src/helpers/utils"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
@@ -67,6 +68,53 @@ func (s *service) Histories(user string, page, limit int, sort int, startDate ti
 	var query = bson.M{ "eventtime": bson.M{ "$gte": startDate, "$lte": endDt }, "username": user}
 	var histories = historyRepo.FindAll(page, limit, sort, query, new(entity.History))
 	return histories
+}
+
+func (s *service) Balance(username string) *entity.Balances {
+	var account = entity.Account{}
+	var query = `{"username": "`+username+`"}`
+	err := accountRepo.FindOne(query, &account)
+	if err != nil {
+		return nil
+	}
+
+	var byCryptos []entity.BalanceByCrypto
+	for _, amount := range account.Amounts {
+		var price = models2.Price{}
+		var queryPrice = `{"cryptocurrency": "`+amount.Id+`"}`
+		pricesRepo.FindOne(queryPrice, &price)
+		var totalByCurrency = make(map[string]float64)
+		for currency, value := range price.Currencies {
+			totalByCurrency[currency] = utils.DecimalMaths().Mul(value, amount.Value)
+		}
+		byCrypto := entity.BalanceByCrypto{
+			Currency: amount.Currency,
+			Amount: amount.Value,
+			ExchangeDataBy: price.ExchangeDataBy,
+			Prices: price.Currencies,
+			TimeOfRate: price.LastUpdate,
+			TotalByCurrency: totalByCurrency,
+		}
+		byCryptos = append(byCryptos, byCrypto)
+	}
+	var total = make(map[string]float64)
+	for _, crypto := range byCryptos {
+		for currency, value := range crypto.TotalByCurrency {
+			if val, ok := total[currency]; ok {
+				total[currency] = utils.CoinCalc().Sum(value, val)
+			} else {
+				total[currency] = value
+			}
+		}
+	}
+
+	var balances = models.Balances{
+		User: username,
+		ByCrypto: byCryptos,
+		Total: total,
+	}
+
+	return &balances
 }
 
 func execTransaction(operation func(entity.Amount) (*entity.Account, error), transaction *entity.Transaction) error {
