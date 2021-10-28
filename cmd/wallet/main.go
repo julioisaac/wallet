@@ -19,6 +19,7 @@ func main() {
 	dbConfig.Init()
 
 	httpRouter.POST("/create", accountController.Create)
+	httpRouter.POST("/deposit", accountController.Deposit)
 
 	httpRouter.SERVE(":8000")
 }
