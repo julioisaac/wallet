@@ -1,4 +1,4 @@
-package cmd
+package routers
 
 import "net/http"
 
