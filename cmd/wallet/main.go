@@ -2,7 +2,7 @@ package wallet
 
 import (
 	"github.com/julioisaac/daxxer-api/routers"
-	"github.com/julioisaac/daxxer-api/routers/mux"
+	"github.com/julioisaac/daxxer-api/routers/gin"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/controller"
 	"github.com/julioisaac/daxxer-api/storage"
 	"github.com/julioisaac/daxxer-api/storage/mongodb"
@@ -10,7 +10,7 @@ import (
 
 var (
 	dbConfig   storage.DBConfig = mongodb.NewMongoConfig()
-	httpRouter routers.Router   = mux.NewMuxRouter()
+	httpRouter routers.Router   = gin.NewGinRouter()
 
 	accountController = controller.NewAccountController()
 )
