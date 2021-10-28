@@ -6,6 +6,7 @@ import (
 	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	"github.com/julioisaac/daxxer-api/src/helpers/utils"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
+	entity2 "github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 )
@@ -15,6 +16,7 @@ type service struct {}
 var (
 	accountRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "account")
 	historyRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "history")
+	pricesRepo  repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
 )
 
 func NewAccountService() *service  {
@@ -80,7 +82,7 @@ func (s *service) Balance(username string) *entity.Balances {
 
 	var byCryptos []entity.BalanceByCrypto
 	for _, amount := range account.Amounts {
-		var price = models2.Price{}
+		var price = entity2.Price{}
 		var queryPrice = `{"cryptocurrency": "`+amount.Id+`"}`
 		pricesRepo.FindOne(queryPrice, &price)
 		var totalByCurrency = make(map[string]float64)
@@ -101,14 +103,14 @@ func (s *service) Balance(username string) *entity.Balances {
 	for _, crypto := range byCryptos {
 		for currency, value := range crypto.TotalByCurrency {
 			if val, ok := total[currency]; ok {
-				total[currency] = utils.CoinCalc().Sum(value, val)
+				total[currency] = utils.DecimalMaths().Sum(value, val)
 			} else {
 				total[currency] = value
 			}
 		}
 	}
 
-	var balances = models.Balances{
+	var balances = entity.Balances{
 		User: username,
 		ByCrypto: byCryptos,
 		Total: total,
