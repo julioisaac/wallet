@@ -2,13 +2,18 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/julioisaac/daxxer-api/src/helpers/repository"
+	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/service"
 	"net/http"
 )
 
 var (
-	accountService = service.NewAccountService()
+	accountRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "account")
+	historyRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "history")
+	pricesRepo  repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
+	accountService = service.NewAccountService(accountRepo, historyRepo, pricesRepo)
 )
 
 type controller struct {}
