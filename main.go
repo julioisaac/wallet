@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/julioisaac/daxxer-api/metrics"
 	"github.com/julioisaac/daxxer-api/routers"
 	"github.com/julioisaac/daxxer-api/routers/gin"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
@@ -9,6 +10,7 @@ import (
 	pkg "github.com/julioisaac/daxxer-api/src/wallet"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/controller"
 	currencies "github.com/julioisaac/daxxer-api/src/wallet/currencies/controller"
+	controller2 "github.com/julioisaac/daxxer-api/src/wallet/prices/controller"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
 	"github.com/julioisaac/daxxer-api/storage"
@@ -31,12 +33,14 @@ var (
 	pricesApiService  = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
 	healthCheck                                         = pkg.NewHealthCheck()
+	pricesController									= controller2.NewPricesController()
 	accountController 									= controller.NewAccountController()
 	currencyController       currencies.CurrencyHandler = currencies.NewCurrencyController()
 	cryptoCurrencyController currencies.CurrencyHandler = currencies.NewCryptoCurrencyController()
 )
 
 func main() {
+	metrics.Setup()
 	dbConfig.Init()
 
 	//update prices interval config or env
@@ -47,6 +51,10 @@ func main() {
 	httpRouter.POST("/create", accountController.Create)
 	httpRouter.POST("/deposit", accountController.Deposit)
 	httpRouter.POST("/withdraw", accountController.Withdraw)
+	httpRouter.GET("/history", accountController.History)
+	httpRouter.GET("/balance", accountController.Balance)
+
+	httpRouter.GET("/prices", pricesController.GetAll)
 
 	httpRouter.POST("/currency", currencyController.Upsert)
 	httpRouter.PUT("/currency", currencyController.Upsert)

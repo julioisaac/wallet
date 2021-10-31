@@ -102,7 +102,7 @@ func (suite *AccountServiceTestSuite) TestAccountNotFoundWhenWithdraw() {
 	incomingTransaction := entity.Transaction{UserName: "ravi"}
 
 	//when
-	mockAccountRepo.On("FindOne", `{"username": "ravi"}`, &entity.Account{}).Return(nil)
+	mockAccountRepo.On("FindOne", `{"username": "ravi"}`, &entity.Account{}).Return(errors.New("account not found"))
 
 	//expected
 	err := suite.accountService.Withdraw(&incomingTransaction)

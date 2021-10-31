@@ -25,7 +25,7 @@ func (c *controller) Upsert(response http.ResponseWriter, request *http.Request)
 	var currency entity.Currency
 	err := json.NewDecoder(request.Body).Decode(&currency)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(`{error: Error trying decode}`))
 		return
 	}
@@ -37,7 +37,7 @@ func (c *controller) Upsert(response http.ResponseWriter, request *http.Request)
 	}
 	err = currencyService.Upsert(&currency)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}
@@ -50,7 +50,7 @@ func (c *controller) Delete(response http.ResponseWriter, request *http.Request)
 	id := request.URL.Query().Get("id")
 	currencies, err := currencyService.Remove(id)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}
@@ -63,7 +63,7 @@ func (c *controller) GetById(response http.ResponseWriter, request *http.Request
 	id := request.URL.Query().Get("id")
 	currencies, err := currencyService.FindById(id)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}

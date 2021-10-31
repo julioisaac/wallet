@@ -18,6 +18,10 @@ func NewMuxRouter() routers.Router {
 	return &muxRouter{}
 }
 
+func (m *muxRouter) SetupTracer() {
+	panic("implement me")
+}
+
 func (m *muxRouter) GET(uri string, f func(w http.ResponseWriter, r *http.Request)) {
 	muxDispatcher.HandleFunc(uri, f).Methods("GET")
 }

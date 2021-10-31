@@ -13,9 +13,10 @@ import (
 
 var (
 	accountRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "account")
+	cryptoRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "cryptoCurrencies")
 	historyRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "history")
 	pricesRepo  repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
-	accountService = service.NewAccountService(accountRepo, historyRepo, pricesRepo)
+	accountService = service.NewAccountService(accountRepo, cryptoRepo, historyRepo, pricesRepo)
 )
 
 type controller struct {}
@@ -29,13 +30,13 @@ func (*controller) Create(response http.ResponseWriter, request *http.Request) {
 	var account entity.Account
 	err := json.NewDecoder(request.Body).Decode(&account)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(`{error: Error trying decode}`))
 		return
 	}
 	err = accountService.Create(&account)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}
@@ -48,13 +49,13 @@ func (*controller) Deposit(response http.ResponseWriter, request *http.Request) 
 	var transaction entity.Transaction
 	err := json.NewDecoder(request.Body).Decode(&transaction)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(`{error: Error trying decode}`))
 		return
 	}
 	err = accountService.Deposit(&transaction)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}
@@ -67,13 +68,13 @@ func (*controller) Withdraw(response http.ResponseWriter, request *http.Request)
 	var transaction entity.Transaction
 	err := json.NewDecoder(request.Body).Decode(&transaction)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(`{error: Error trying decode}`))
 		return
 	}
 	err = accountService.Withdraw(&transaction)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}

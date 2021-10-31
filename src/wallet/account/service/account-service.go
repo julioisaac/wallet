@@ -5,6 +5,7 @@ import (
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/helpers/utils"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
+	entity3 "github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	entity2 "github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
@@ -20,12 +21,13 @@ type AccountService interface {
 
 type accountService struct {
 	accountRepo repository.DBRepository
+	cryptoCurrencyRepo repository.DBRepository
 	historyRepo repository.DBRepository
 	pricesRepo  repository.DBRepository
 }
 
-func NewAccountService(accountRepo, historyRepo, pricesRepo repository.DBRepository) AccountService  {
-	return &accountService{accountRepo, historyRepo, pricesRepo}
+func NewAccountService(accountRepo, cryptoCurrencyRepo, historyRepo, pricesRepo repository.DBRepository) AccountService  {
+	return &accountService{accountRepo, cryptoCurrencyRepo, historyRepo, pricesRepo}
 }
 
 func (s *accountService) Create(account *entity.Account) error {
@@ -40,16 +42,23 @@ func (s *accountService) Create(account *entity.Account) error {
 }
 
 func (s *accountService) Deposit(transaction *entity.Transaction) error {
+	var cryptoCurrency = entity3.CryptoCurrency{}
+	var queryCrypto = `{"symbol": "`+transaction.Amount.Currency+`"}`
+	err := s.cryptoCurrencyRepo.FindOne(queryCrypto, &cryptoCurrency)
+	if err != nil {
+		return errors.New(transaction.Amount.Currency+" is not supported yet")
+	}
+
 	var account = entity.Account{}
 	transaction.Type = "deposit"
 	var query = `{"username": "`+transaction.UserName+`"}`
-	err := s.accountRepo.FindOne(query, &account)
-	if err != nil {
+	err1 := s.accountRepo.FindOne(query, &account)
+	if err1 != nil {
 		return errors.New("account not found")
 	}
-	err1 := s.execTransaction(account.Deposit, transaction)
-	if err1 != nil {
-		return err1
+	err2 := s.execTransaction(account.Deposit, transaction)
+	if err2 != nil {
+		return err2
 	}
 	return nil
 }

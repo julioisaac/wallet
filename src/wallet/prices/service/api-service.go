@@ -27,7 +27,6 @@ func NewApiService(cryptoRepo, currencyRepo, pricesRepo repository.DBRepository,
 	return &apiService{cryptoRepo, currencyRepo, pricesRepo, apiRepo}
 }
 
-
 func (s *apiService) Update() error {
 	cryptoCurrencies := s.cryptoRepo.FindAll(0, 100, 1, bson.M{}, new(entity.CryptoCurrency))
 	currencies := s.currencyRepo.FindAll(0, 100, 1, bson.M{}, new(entity.Currency))
