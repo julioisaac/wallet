@@ -13,8 +13,9 @@ func NewDaxxerTicker() *ticker {
 	return &ticker{}
 }
 
-func (*ticker) Run(interval time.Duration, f func()) {
+func (*ticker) Run(interval time.Duration, f func() error) {
 	go func() {
+		// log info
 		fmt.Printf("starting daxxer ticker for %s\n", GetFunctionName(f))
 		ticker := time.NewTicker(interval * time.Minute)
 		defer ticker.Stop()

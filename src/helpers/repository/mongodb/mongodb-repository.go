@@ -10,16 +10,16 @@ import (
 	"reflect"
 )
 
-type repo struct {
+type MongoRepository struct {
 	database   string
 	collection string
 }
 
 func NewMongodbRepository(database, collection string) repository.DBRepository {
-	return &repo{database, collection}
+	return &MongoRepository{database, collection}
 }
 
-func (r *repo) Insert(value interface{}) error {
+func (r *MongoRepository) Insert(value interface{}) error {
 	client := mongodb.DB.Mongo
 	collection := client.Database(r.database).Collection(r.collection)
 	_, err := collection.InsertOne(context.TODO(), value)
@@ -29,7 +29,7 @@ func (r *repo) Insert(value interface{}) error {
 	return nil
 }
 
-func (r *repo) Upsert(selector interface{}, update interface{}) error {
+func (r *MongoRepository) Upsert(selector interface{}, update interface{}) error {
 	client := mongodb.DB.Mongo
 	opts := options.Update().SetUpsert(true)
 	collection := client.Database(r.database).Collection(r.collection)
@@ -40,7 +40,7 @@ func (r *repo) Upsert(selector interface{}, update interface{}) error {
 	return nil
 }
 
-func (r *repo) DeleteOne(key string, value interface{}) (int64, error) {
+func (r *MongoRepository) DeleteOne(key string, value interface{}) (int64, error) {
 	client := mongodb.DB.Mongo
 	collection := client.Database(r.database).Collection(r.collection)
 	filter := bson.D{{key, value}}
@@ -51,7 +51,7 @@ func (r *repo) DeleteOne(key string, value interface{}) (int64, error) {
 	return count.DeletedCount, err
 }
 
-func (r *repo) FindAll(Skip, Limit, sort int, query interface{}, objType interface{}) []interface{} {
+func (r *MongoRepository) FindAll(Skip, Limit, sort int, query interface{}, objType interface{}) []interface{} {
 	var responses = make([]interface{}, 0)
 	objectType := reflect.TypeOf(objType).Elem()
 
@@ -77,7 +77,7 @@ func (r *repo) FindAll(Skip, Limit, sort int, query interface{}, objType interfa
 	return responses
 }
 
-func (r *repo) FindOne(query string, response interface{}) error {
+func (r *MongoRepository) FindOne(query string, response interface{}) error {
 	client := mongodb.DB.Mongo
 	collection, _ := client.Database(r.database).Collection(r.collection).Clone()
 	var filter interface{}

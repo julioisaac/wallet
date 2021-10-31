@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAccount_Success_Deposit(t *testing.T) {
+func TestSuccessWhenDeposit(t *testing.T) {
 
 	tests := []struct {
 		name  string
@@ -133,7 +133,7 @@ func TestAccount_Success_Deposit(t *testing.T) {
 	}
 }
 
-func TestAccount_Error_Deposit(t *testing.T) {
+func TestErrorWhenDeposit(t *testing.T) {
 
 	test := struct {
 		name  string
@@ -164,7 +164,7 @@ func TestAccount_Error_Deposit(t *testing.T) {
 	assert.Equal(t, test.expected, err, test.name)
 }
 
-func TestAccount_Success_Withdraw(t *testing.T) {
+func TestSuccessWhenWithdraw(t *testing.T) {
 
 	tests := []struct {
 		name  string
@@ -237,7 +237,7 @@ func TestAccount_Success_Withdraw(t *testing.T) {
 	}
 }
 
-func TestAccount_Error_Withdraw(t *testing.T) {
+func TestErrorWhenWithdraw(t *testing.T) {
 
 	tests := []struct {
 		name  string
@@ -323,7 +323,7 @@ func TestAccount_Error_Withdraw(t *testing.T) {
 	}
 }
 
-func TestAccount_contains(t *testing.T) {
+func TestContains(t *testing.T) {
 	tests := []struct {
 		name  string
 		given *Account

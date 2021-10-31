@@ -3,6 +3,7 @@ package routers
 import "net/http"
 
 type Router interface {
+	SetupTracer()
 	GET(uri string, f func(w http.ResponseWriter, r *http.Request))
 	POST(uri string, f func(w http.ResponseWriter, r *http.Request))
 	PUT(uri string, f func(w http.ResponseWriter, r *http.Request))

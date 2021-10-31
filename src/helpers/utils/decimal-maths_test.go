@@ -10,7 +10,7 @@ type inputs struct {
 	incoming float64
 }
 
-func Test_calc_Sum(t *testing.T) {
+func TestCalcSum(t *testing.T) {
 
 	tests := []struct {
 		name string
@@ -30,7 +30,7 @@ func Test_calc_Sum(t *testing.T) {
 	}
 }
 
-func Test_calc_Sub(t *testing.T) {
+func TestCalcSub(t *testing.T) {
 
 	tests := []struct {
 		name string
@@ -50,7 +50,7 @@ func Test_calc_Sub(t *testing.T) {
 	}
 }
 
-func Test_calc_Mul(t *testing.T) {
+func TestCalcMul(t *testing.T) {
 
 	tests := []struct {
 		name string

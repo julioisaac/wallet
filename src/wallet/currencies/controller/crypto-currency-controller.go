@@ -2,13 +2,16 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/julioisaac/daxxer-api/src/helpers/repository"
+	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/service"
 	"net/http"
 )
 
 var (
-	cryptoService = service.NewCryptoCurrencyService()
+	cryptoRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "cryptoCurrencies")
+	cryptoService = service.NewCryptoCurrencyService(cryptoRepo)
 )
 
 type cryptoController struct {}
@@ -22,7 +25,7 @@ func (c *cryptoController) Upsert(response http.ResponseWriter, request *http.Re
 	var crypto entity.CryptoCurrency
 	err := json.NewDecoder(request.Body).Decode(&crypto)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(`{error: Error trying decode}`))
 		return
 	}
@@ -34,7 +37,7 @@ func (c *cryptoController) Upsert(response http.ResponseWriter, request *http.Re
 	}
 	err = cryptoService.Upsert(&crypto)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}
@@ -47,7 +50,7 @@ func (c *cryptoController) Delete(response http.ResponseWriter, request *http.Re
 	id := request.URL.Query().Get("id")
 	currencies, err := cryptoService.Remove(id)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}
@@ -60,7 +63,7 @@ func (c *cryptoController) GetById(response http.ResponseWriter, request *http.R
 	id := request.URL.Query().Get("id")
 	currencies, err := cryptoService.FindById(id)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	}

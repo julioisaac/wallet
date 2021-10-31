@@ -2,38 +2,40 @@ package repository
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/utils"
+	errors2 "github.com/pkg/errors"
 	"io"
-	"log"
 	"net/http"
-	"time"
 )
 
 var (
 	util = utils.Util()
 )
 
-type repo struct {
+type coinGeckoRepo struct {
 	Url	string
-	Client http.Client
+	Client HttpClient
 }
 
 type GeckoSimplePrice map[string]map[string]float64
 
-func NewCoinGeckoApiRepo(url string) ApiRepository {
-	return &repo{
+func NewCoinGeckoApiRepo(url string, client HttpClient) ApiRepository {
+	return &coinGeckoRepo{
 		Url: url,
-		Client: http.Client {
-			Timeout: time.Duration(5 * time.Second),
-		},
+		Client: client,
 	}
 }
 
-func (r *repo) GetPrices(cryptoCurrencies, currencies []interface{}) (*[]entity.Price, error) {
+func (r *coinGeckoRepo) GetPrices(cryptoCurrencies, currencies *[]interface{}) (*[]entity.Price, error) {
 
 	cryptoIds := util.ExtractAndJoinByField(cryptoCurrencies, "Id", ",")
 	vsCurrencies := util.ExtractAndJoinByField(currencies, "Id", ",")
+
+	if cryptoIds == "" || vsCurrencies == "" {
+		return nil, errors.New("error trying to extract currencies")
+	}
 
 	params := map[string]string{
 		"ids": cryptoIds,
@@ -41,7 +43,7 @@ func (r *repo) GetPrices(cryptoCurrencies, currencies []interface{}) (*[]entity.
 	}
 	resp, err := r.DoRequest(params)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	geckoPrices, err1 := buildCoinGeckoPriceByBody(resp.Body)
@@ -57,23 +59,33 @@ func (r *repo) GetPrices(cryptoCurrencies, currencies []interface{}) (*[]entity.
 	return &prices, err
 }
 
-func (r *repo) DoRequest(params map[string]string) (*http.Response, error) {
+func (r *coinGeckoRepo) DoRequest(params map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", r.Url, nil)
 	if err != nil {
-		log.Print(err)
-		return nil, err
+		// log error
+		return nil, errors2.Wrap(err, "error trying to create new request "+r.Url)
 	}
+
 	q := req.URL.Query()
 	q.Add("ids", params["ids"])
 	q.Add("vs_currencies", params["currencies"])
 	req.URL.RawQuery = q.Encode()
-	resp, err2 := r.Client.Do(req)
-	return resp, err2
+
+	resp, err1 := r.Client.Do(req)
+	if err1 != nil {
+		// log error
+		return nil, errors2.Wrap(err1, "error trying to do request "+r.Url)
+	}
+	return resp, nil
 }
 
 func buildCoinGeckoPriceByBody(body io.ReadCloser) (*GeckoSimplePrice, error) {
 	geckoPrices := GeckoSimplePrice{}
 	b, _ := io.ReadAll(body)
 	err := json.Unmarshal(b, &geckoPrices)
-	return &geckoPrices, err
+	if err != nil {
+		// log error
+		return nil, errors2.Wrap(err, "error trying to bind coinGeckoPrice from body")
+	}
+	return &geckoPrices, nil
 }

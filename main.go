@@ -1,34 +1,60 @@
 package main
 
 import (
+	"github.com/julioisaac/daxxer-api/metrics"
 	"github.com/julioisaac/daxxer-api/routers"
 	"github.com/julioisaac/daxxer-api/routers/gin"
+	"github.com/julioisaac/daxxer-api/src/helpers/repository"
+	mongodb2 "github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	"github.com/julioisaac/daxxer-api/src/helpers/ticker"
+	pkg "github.com/julioisaac/daxxer-api/src/wallet"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/controller"
 	currencies "github.com/julioisaac/daxxer-api/src/wallet/currencies/controller"
+	controller2 "github.com/julioisaac/daxxer-api/src/wallet/prices/controller"
+	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
 	"github.com/julioisaac/daxxer-api/storage"
 	"github.com/julioisaac/daxxer-api/storage/mongodb"
+	"net/http"
+	"time"
 )
 
 var (
 	dbConfig   storage.DBConfig = mongodb.NewMongoConfig()
 	httpRouter routers.Router   = gin.NewGinRouter()
 	daxxerTicker      = ticker.NewDaxxerTicker()
-	pricesApiService  = service.NewApiService()
-	accountController = controller.NewAccountController()
+
+	//db name and collections config or env
+	cryptoRepo repository.DBRepository  = mongodb2.NewMongodbRepository("daxxer", "cryptoCurrencies")
+	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "currencies")
+	pricesRepo  repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "prices")
+	// url and timeout in config or env
+	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo("https://api.coingecko.com/api/v3/simple/price", &http.Client{Timeout: 5 * time.Second})
+	pricesApiService  = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
+
+	healthCheck                                         = pkg.NewHealthCheck()
+	pricesController									= controller2.NewPricesController()
+	accountController 									= controller.NewAccountController()
 	currencyController       currencies.CurrencyHandler = currencies.NewCurrencyController()
 	cryptoCurrencyController currencies.CurrencyHandler = currencies.NewCryptoCurrencyController()
 )
 
 func main() {
+	metrics.Setup()
 	dbConfig.Init()
 
+	//update prices interval config or env
 	daxxerTicker.Run(1, pricesApiService.Update)
+
+	httpRouter.GET("/health-check", healthCheck.IsAlive)
 
 	httpRouter.POST("/create", accountController.Create)
 	httpRouter.POST("/deposit", accountController.Deposit)
 	httpRouter.POST("/withdraw", accountController.Withdraw)
+	httpRouter.GET("/history", accountController.History)
+	httpRouter.GET("/balance", accountController.Balance)
+
+	httpRouter.GET("/prices", pricesController.GetAll)
 
 	httpRouter.POST("/currency", currencyController.Upsert)
 	httpRouter.PUT("/currency", currencyController.Upsert)
@@ -42,5 +68,6 @@ func main() {
 	httpRouter.GET("/crypto-currency", cryptoCurrencyController.GetById)
 	httpRouter.GET("/crypto-currencies", cryptoCurrencyController.GetAll)
 
+	//app port config or env
 	httpRouter.SERVE(":8000")
 }

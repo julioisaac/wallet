@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
-	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -16,17 +15,15 @@ type CurrencyService interface {
 	Remove(id string) (int64, error)
 }
 
-type service struct {}
-
-var (
-	currencyRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "currencies")
-)
-
-func NewCurrencyService() CurrencyService {
-	return &service{}
+type currencyService struct {
+	currencyRepo repository.DBRepository
 }
 
-func (s *service) Validate(currency *entity.Currency) error {
+func NewCurrencyService(currencyRepo repository.DBRepository) CurrencyService {
+	return &currencyService{currencyRepo}
+}
+
+func (s *currencyService) Validate(currency *entity.Currency) error {
 	if currency.Id == "" {
 		err := errors.New("Currency.Id must not be empty")
 		return err
@@ -38,35 +35,35 @@ func (s *service) Validate(currency *entity.Currency) error {
 	return nil
 }
 
-func (s *service) Upsert(currency *entity.Currency) error {
+func (s *currencyService) Upsert(currency *entity.Currency) error {
 	selector := bson.M{"id": currency.Id}
 	update := bson.M{
 		"$set": currency,
 	}
-	err := currencyRepo.Upsert(selector, update)
+	err := s.currencyRepo.Upsert(selector, update)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *service) FindById(id string) (*entity.Currency, error) {
+func (s *currencyService) FindById(id string) (*entity.Currency, error) {
 	var currency = entity.Currency{}
 	var query = `{"id": "`+id+`"}`
-	err := currencyRepo.FindOne(query, &currency)
+	err := s.currencyRepo.FindOne(query, &currency)
 	if err != nil {
 		return nil, err
 	}
 	return &currency, err
 }
 
-func (s *service) FindAll() []interface{} {
+func (s *currencyService) FindAll() []interface{} {
 	var query = bson.M{}
-	currencies := currencyRepo.FindAll(0, 100, 1, query, new(entity.Currency))
+	currencies := s.currencyRepo.FindAll(0, 100, 1, query, new(entity.Currency))
 	return currencies
 }
 
-func (s *service) Remove(id string)(int64, error)  {
-	count, err := currencyRepo.DeleteOne("id", id)
+func (s *currencyService) Remove(id string)(int64, error)  {
+	count, err := s.currencyRepo.DeleteOne("id", id)
 	return count, err
 }
