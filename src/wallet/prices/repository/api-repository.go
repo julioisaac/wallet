@@ -6,6 +6,6 @@ import (
 )
 
 type ApiRepository interface {
-	GetPrices([]interface{}, []interface{}) (*[]entity.Price, error)
+	GetPrices(*[]interface{}, *[]interface{}) (*[]entity.Price, error)
 	DoRequest(params map[string]string) (*http.Response, error)
 }

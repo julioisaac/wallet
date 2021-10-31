@@ -1,8 +1,9 @@
 package utils
 
 import (
+	"encoding/json"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
-	"reflect"
+	"log"
 	"strings"
 	"time"
 )
@@ -13,11 +14,16 @@ func Util() *util {
 	return &util{}
 }
 
-func (u *util) ExtractAndJoinByField(sources []interface{}, field string, sep string) string {
+func (u *util) ExtractAndJoinByField(sources *[]interface{}, field string, sep string) string {
 	var extracted []string
-	for _, source := range sources {
-		v := reflect.ValueOf(source).Elem()
-		extracted = append(extracted, v.FieldByName(field).String())
+	for _, source := range *sources {
+		m := make(map[string]interface{})
+		src, _ := json.Marshal(&source)
+		err := json.Unmarshal(src, &m)
+		if err != nil {
+			log.Fatal(err)
+		}
+		extracted = append(extracted, m[field].(string))
 	}
 	return strings.Join(extracted,sep)
 }

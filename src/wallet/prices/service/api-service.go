@@ -1,39 +1,44 @@
 package service
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
-	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
+	errors2 "github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 )
 
-var (
-	pricesRepo   repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
-	cryptoRepo   repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "cryptoCurrencies")
-	currencyRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "currencies")
-	apiRepo      api.ApiRepository       = api.NewCoinGeckoApiRepo("https://api.coingecko.com/api/v3/simple/price")
-)
-
-func NewApiService() *service {
-	return &service{}
+type ApiService interface {
+	Update() error
 }
 
-type service struct {}
+type apiService struct {
+	cryptoRepo repository.DBRepository
+	currencyRepo repository.DBRepository
+	pricesRepo repository.DBRepository
+	apiRepo  api.ApiRepository
+}
 
-func (s service) Update() {
-	cryptoCurrencies := cryptoRepo.FindAll(0, 100, 1, bson.M{}, new(entity.CryptoCurrency))
-	currencies := currencyRepo.FindAll(0, 100, 1, bson.M{}, new(entity.Currency))
+func NewApiService(cryptoRepo, currencyRepo, pricesRepo repository.DBRepository, apiRepo api.ApiRepository) ApiService {
+	return &apiService{cryptoRepo, currencyRepo, pricesRepo, apiRepo}
+}
+
+
+func (s *apiService) Update() error {
+	cryptoCurrencies := s.cryptoRepo.FindAll(0, 100, 1, bson.M{}, new(entity.CryptoCurrency))
+	currencies := s.currencyRepo.FindAll(0, 100, 1, bson.M{}, new(entity.Currency))
 	if cryptoCurrencies == nil || len(cryptoCurrencies) == 0 || currencies == nil || len(currencies) == 0 {
-		fmt.Printf("no currencies to update\n")
-		return
+		return errors.New("no currencies to update")
 	}
+	// log info updating prices {time} from {externalService}
 	fmt.Printf("update prices %s\n", time.Now())
-	prices, err := apiRepo.GetPrices(cryptoCurrencies, currencies)
+	prices, err := s.apiRepo.GetPrices(&cryptoCurrencies, &currencies)
 	if err != nil {
-		return
+		return errors2.Wrap(err, "error trying to get prices")
 	}
 
 	for _, price := range *prices {
@@ -41,9 +46,12 @@ func (s service) Update() {
 		update := bson.M{
 			"$set": price,
 		}
-		err2 := pricesRepo.Upsert(selector, update)
+		err2 := s.pricesRepo.Upsert(selector, update)
 		if err2 != nil {
-			return
+			priceStr, _ := json.Marshal(price)
+			// log error
+			return errors2.Wrap(err, "error trying to upsert price "+string(priceStr)+" from "+price.ExchangeDataBy)
 		}
 	}
+	return nil
 }

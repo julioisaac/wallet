@@ -8,7 +8,7 @@ type MockDBRepository struct {
 
 func (m *MockDBRepository) FindAll(Skip, Limit, sort int, query interface{}, objType interface{}) []interface{} {
 	ret := m.Called(Skip, Limit, sort, query, objType)
-	return ret
+	return ret.Get(0).([]interface{})
 }
 
 func (m *MockDBRepository) FindOne(query string, response interface{}) error {

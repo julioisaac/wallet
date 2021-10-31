@@ -7,6 +7,8 @@ import (
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/service"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 var (
@@ -78,3 +80,58 @@ func (*controller) Withdraw(response http.ResponseWriter, request *http.Request)
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode(transaction)
 }
+
+func (*controller) Balance(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Content-Type", "application/json")
+	user := request.URL.Query().Get("user")
+	amounts := accountService.Balance(user)
+	if amounts == nil {
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte("no balance found for this user"))
+		return
+	}
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode(amounts)
+}
+
+
+func (*controller) History(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Content-Type", "application/json")
+
+	page, err := strconv.Atoi(request.URL.Query().Get("page"))
+	if err != nil {
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte("Page must be int"))
+		return
+	}
+	limit, err2 := strconv.Atoi(request.URL.Query().Get("limit"))
+	if err2 != nil {
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte("Limit must be int"))
+		return
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	user := request.URL.Query().Get("user")
+	startDate := request.URL.Query().Get("startDate")
+	endDate := request.URL.Query().Get("endDate")
+
+	startDt, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte("Bad startDate format"))
+		return
+	}
+	endDt, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte("Bad endDate format"))
+		return
+	}
+
+	histories := accountService.Histories(user, page, limit, 1, startDt, endDt)
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode(histories)
+}
+

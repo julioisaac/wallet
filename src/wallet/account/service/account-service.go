@@ -18,17 +18,17 @@ type AccountService interface {
 	Balance(username string) *entity.Balances
 }
 
-type service struct {
+type accountService struct {
 	accountRepo repository.DBRepository
 	historyRepo repository.DBRepository
 	pricesRepo  repository.DBRepository
 }
 
 func NewAccountService(accountRepo, historyRepo, pricesRepo repository.DBRepository) AccountService  {
-	return &service{accountRepo, historyRepo, pricesRepo}
+	return &accountService{accountRepo, historyRepo, pricesRepo}
 }
 
-func (s *service) Create(account *entity.Account) error {
+func (s *accountService) Create(account *entity.Account) error {
 	var storedAccount entity.Account
 	var query = `{"username": "`+account.UserName+`"}`
 	_ = s.accountRepo.FindOne(query, &storedAccount)
@@ -39,7 +39,7 @@ func (s *service) Create(account *entity.Account) error {
 	return s.accountRepo.Insert(account)
 }
 
-func (s *service) Deposit(transaction *entity.Transaction) error {
+func (s *accountService) Deposit(transaction *entity.Transaction) error {
 	var account = entity.Account{}
 	transaction.Type = "deposit"
 	var query = `{"username": "`+transaction.UserName+`"}`
@@ -54,7 +54,7 @@ func (s *service) Deposit(transaction *entity.Transaction) error {
 	return nil
 }
 
-func (s *service) Withdraw(transaction *entity.Transaction) error {
+func (s *accountService) Withdraw(transaction *entity.Transaction) error {
 	var account = entity.Account{}
 	transaction.Type = "withdraw"
 	var query = `{"username": "`+transaction.UserName+`"}`
@@ -70,14 +70,14 @@ func (s *service) Withdraw(transaction *entity.Transaction) error {
 	return nil
 }
 
-func (s *service) Histories(user string, page, limit int, sort int, startDate time.Time, endDate time.Time) []interface{} {
+func (s *accountService) Histories(user string, page, limit int, sort int, startDate time.Time, endDate time.Time) []interface{} {
 	var endDt = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, endDate.Nanosecond(), endDate.Location())
 	var query = bson.M{ "eventtime": bson.M{ "$gte": startDate, "$lte": endDt }, "username": user}
 	var histories = s.historyRepo.FindAll(page, limit, sort, query, new(entity.History))
 	return histories
 }
 
-func (s *service) Balance(username string) *entity.Balances {
+func (s *accountService) Balance(username string) *entity.Balances {
 	var account = entity.Account{}
 	var query = `{"username": "`+username+`"}`
 	err := s.accountRepo.FindOne(query, &account)
@@ -99,7 +99,7 @@ func (s *service) Balance(username string) *entity.Balances {
 	return buildBalances(username, byCryptos ,total)
 }
 
-func (s *service) execTransaction(operation func(entity.Amount) (*entity.Account, error), transaction *entity.Transaction) error {
+func (s *accountService) execTransaction(operation func(entity.Amount) (*entity.Account, error), transaction *entity.Transaction) error {
 	account, err := operation(transaction.Amount)
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func (s *service) execTransaction(operation func(entity.Amount) (*entity.Account
 	return nil
 }
 
-func (s *service) saveHistory(transaction *entity.Transaction) error {
+func (s *accountService) saveHistory(transaction *entity.Transaction) error {
 	err := s.historyRepo.Insert(buildHistory(transaction))
 	if err != nil {
 		return err
@@ -175,5 +175,4 @@ func buildBalances(user string, byCryptos []entity.BalanceByCrypto, total map[st
 		ByCrypto: byCryptos,
 		Total: total,
 	}
-
 }
