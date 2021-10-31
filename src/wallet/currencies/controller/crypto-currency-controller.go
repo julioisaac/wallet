@@ -2,13 +2,16 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/julioisaac/daxxer-api/src/helpers/repository"
+	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/service"
 	"net/http"
 )
 
 var (
-	cryptoService = service.NewCryptoCurrencyService()
+	cryptoRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "cryptoCurrencies")
+	cryptoService = service.NewCryptoCurrencyService(cryptoRepo)
 )
 
 type cryptoController struct {}
