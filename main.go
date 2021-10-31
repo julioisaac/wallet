@@ -6,6 +6,7 @@ import (
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	mongodb2 "github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	"github.com/julioisaac/daxxer-api/src/helpers/ticker"
+	pkg "github.com/julioisaac/daxxer-api/src/wallet"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/controller"
 	currencies "github.com/julioisaac/daxxer-api/src/wallet/currencies/controller"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
@@ -29,7 +30,8 @@ var (
 	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo("https://api.coingecko.com/api/v3/simple/price", &http.Client{Timeout: 5 * time.Second})
 	pricesApiService  = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
-	accountController = controller.NewAccountController()
+	healthCheck                                         = pkg.NewHealthCheck()
+	accountController 									= controller.NewAccountController()
 	currencyController       currencies.CurrencyHandler = currencies.NewCurrencyController()
 	cryptoCurrencyController currencies.CurrencyHandler = currencies.NewCryptoCurrencyController()
 )
@@ -39,6 +41,8 @@ func main() {
 
 	//update prices interval config or env
 	daxxerTicker.Run(1, pricesApiService.Update)
+
+	httpRouter.GET("/health-check", healthCheck.IsAlive)
 
 	httpRouter.POST("/create", accountController.Create)
 	httpRouter.POST("/deposit", accountController.Deposit)
