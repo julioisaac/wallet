@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"errors"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	entity2 "github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	repository2 "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
@@ -31,6 +32,7 @@ type ApiServiceTestSuite struct {
 }
 
 func (suite *ApiServiceTestSuite) SetupSuite() {
+	logs.NewZapLogger().Init()
 	responseCoinGecko, _ := ioutil.ReadFile("./mock/coingecko-response.json")
 	responseCoinBaseBtc, _ := ioutil.ReadFile("./mock/coinbase-response-btc.json")
 	responseCoinBaseEth, _ := ioutil.ReadFile("./mock/coinbase-response-eth.json")

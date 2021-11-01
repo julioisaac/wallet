@@ -44,7 +44,7 @@ func (s *accountService) Create(account *entity.Account) error {
 
 func (s *accountService) Deposit(transaction *entity.Transaction) error {
 	var cryptoCurrency = entity3.CryptoCurrency{}
-	var queryCrypto = utils2.QueryUtil().Build("symbol", transaction.Amount.Currency)
+	var queryCrypto = utils2.QueryUtil().Build("Symbol", transaction.Amount.Currency)
 	err := s.cryptoCurrencyRepo.FindOne(queryCrypto, &cryptoCurrency)
 	if err != nil {
 		return errors.New(transaction.Amount.Currency+" is not supported yet")

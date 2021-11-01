@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
+	entity3 "github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	entity2 "github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -13,6 +14,7 @@ import (
 
 var (
 	mockAccountRepo repository.MockDBRepository
+	mockCryptoCurrencyRepo repository.MockDBRepository
 	mockHistoryRepo repository.MockDBRepository
 	mockPricesRepo repository.MockDBRepository
 )
@@ -24,9 +26,10 @@ type AccountServiceTestSuite struct {
 
 func (suite *AccountServiceTestSuite) SetupTest() {
 	mockAccountRepo = repository.MockDBRepository{}
+	mockCryptoCurrencyRepo = repository.MockDBRepository{}
 	mockHistoryRepo = repository.MockDBRepository{}
 	mockPricesRepo = repository.MockDBRepository{}
-	suite.accountService = NewAccountService(&mockAccountRepo, &mockHistoryRepo, &mockPricesRepo)
+	suite.accountService = NewAccountService(&mockAccountRepo, &mockCryptoCurrencyRepo, &mockHistoryRepo, &mockPricesRepo)
 }
 
 func (suite *AccountServiceTestSuite) TestAccountExistsWhenCreate() {
@@ -61,12 +64,45 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenCreate() {
 	suite.Nil(err)
 }
 
-func (suite *AccountServiceTestSuite) TestAccountNotFoundWhenDeposit() {
+func (suite *AccountServiceTestSuite) TestCryptoNotFoundWhenDeposit() {
 	//given
-	incomingTransaction := entity.Transaction{UserName: "gabi"}
+	incomingTransaction := entity.Transaction{
+		UserName: "gabi",
+		Amount: entity.Amount{
+			Id:       "cardano",
+			Currency: "ada",
+			Value:    0.7,
+		},
+	}
 
 	//when
-	mockAccountRepo.On("FindOne", `{"username": "gabi"}`, &entity.Account{}).Return(nil)
+	mockCryptoCurrencyRepo.On("FindOne", `{"Symbol": "ada"}`, &entity3.CryptoCurrency{}).Return(errors.New("ada is not supported yet"))
+
+	//expected
+	err := suite.accountService.Deposit(&incomingTransaction)
+	mockCryptoCurrencyRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
+	mockAccountRepo.AssertNumberOfCalls(suite.T(), "FindOne", 0)
+	suite.Error(err, "ada is not supported yet")
+}
+
+func (suite *AccountServiceTestSuite) TestAccountNotFoundWhenDeposit() {
+	//given
+	incomingTransaction := entity.Transaction{
+		UserName: "gabi",
+		Amount: entity.Amount{
+			Id:       "ethereum",
+			Currency: "eth",
+			Value:    0.7,
+		},
+	}
+
+	//when
+	mockCryptoCurrencyRepo.On("FindOne", `{"Symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
+		cryptoCurrency := args.Get(1).(*entity3.CryptoCurrency)
+		cryptoCurrency.Symbol = "eth"
+		cryptoCurrency.Id = "ethereum"
+	})
+	mockAccountRepo.On("FindOne", `{"username": "gabi"}`, &entity.Account{}).Return(errors.New("account not found"))
 
 	//expected
 	err := suite.accountService.Deposit(&incomingTransaction)
@@ -86,6 +122,11 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenDeposit() {
 	}
 
 	//when
+	mockCryptoCurrencyRepo.On("FindOne", `{"Symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
+		cryptoCurrency := args.Get(1).(*entity3.CryptoCurrency)
+		cryptoCurrency.Symbol = "eth"
+		cryptoCurrency.Id = "ethereum"
+	})
 	mockAccountRepo.On("FindOne", `{"username": "gabi"}`, &entity.Account{}).Return(nil)
 	mockAccountRepo.On("Upsert", mock.Anything, mock.Anything).Return(nil)
 	mockHistoryRepo.On("Insert", mock.Anything).Return(nil)
