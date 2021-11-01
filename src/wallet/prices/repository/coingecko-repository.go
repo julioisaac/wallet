@@ -1,11 +1,14 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/utils"
 	errors2 "github.com/pkg/errors"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 )
@@ -34,6 +37,7 @@ func (r *coinGeckoRepo) GetPrices(cryptoCurrencies, currencies *[]interface{}) (
 	vsCurrencies := util.ExtractAndJoinByField(currencies, "Id", ",")
 
 	if cryptoIds == "" || vsCurrencies == "" {
+		logs.Instance.Log.Warn(context.Background(), "error trying to extract currencies")
 		return nil, errors.New("error trying to extract currencies")
 	}
 
@@ -48,6 +52,7 @@ func (r *coinGeckoRepo) GetPrices(cryptoCurrencies, currencies *[]interface{}) (
 
 	geckoPrices, err1 := buildCoinGeckoPriceByBody(resp.Body)
 	if err1 != nil {
+		logs.Instance.Log.Error(context.Background(), "error trying to build CoinGeckoPrice by Body", zap.Error(err1))
 		return nil, err1
 	}
 	var prices []entity.Price
@@ -62,7 +67,7 @@ func (r *coinGeckoRepo) GetPrices(cryptoCurrencies, currencies *[]interface{}) (
 func (r *coinGeckoRepo) DoRequest(params map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", r.Url, nil)
 	if err != nil {
-		// log error
+		logs.Instance.Log.Error(context.Background(), "error trying to create new request "+r.Url, zap.Error(err))
 		return nil, errors2.Wrap(err, "error trying to create new request "+r.Url)
 	}
 
@@ -73,7 +78,7 @@ func (r *coinGeckoRepo) DoRequest(params map[string]string) (*http.Response, err
 
 	resp, err1 := r.Client.Do(req)
 	if err1 != nil {
-		// log error
+		logs.Instance.Log.Error(context.Background(), "error trying to do request "+r.Url, zap.Error(err1))
 		return nil, errors2.Wrap(err1, "error trying to do request "+r.Url)
 	}
 	return resp, nil
@@ -84,7 +89,6 @@ func buildCoinGeckoPriceByBody(body io.ReadCloser) (*GeckoSimplePrice, error) {
 	b, _ := io.ReadAll(body)
 	err := json.Unmarshal(b, &geckoPrices)
 	if err != nil {
-		// log error
 		return nil, errors2.Wrap(err, "error trying to bind coinGeckoPrice from body")
 	}
 	return &geckoPrices, nil

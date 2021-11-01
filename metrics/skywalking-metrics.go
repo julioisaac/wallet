@@ -1,12 +1,13 @@
 package metrics
 
 import (
+	"context"
 	"github.com/SkyAPM/go2sky"
 	http2 "github.com/SkyAPM/go2sky/plugins/http"
 	"github.com/SkyAPM/go2sky/reporter"
-	"log"
+	"github.com/julioisaac/daxxer-api/internal/logs"
+	"go.uber.org/zap"
 	"net/http"
-	"os"
 	"sync"
 )
 
@@ -27,22 +28,19 @@ func Setup() *Metrics {
 
 func getTracer() interface{} {
 	if instanceTracer == nil {
-		// log
-		logger := log.New(os.Stderr, "WithLogger", log.LstdFlags)
-		options := reporter.WithLogger(logger)
-		re, err := reporter.NewGRPCReporter("skywalking-oap:11800", options)
+		re, err := reporter.NewGRPCReporter("skywalking-oap:11800")
 
 		if err != nil {
-			logger.Fatalf("new reporter error %v \n", err)
+			logs.Instance.Log.Error(context.Background(), "error creating reporter", zap.Error(err))
 			return nil
 		}
 
 		tracer, err := go2sky.NewTracer("daxxer-api", go2sky.WithReporter(re))
 		if err != nil {
-			logger.Fatalf("create tracer error %v \n", err)
+			logs.Instance.Log.Error(context.Background(), "error creating tracer", zap.Error(err))
 			return nil
 		}
-		logger.Print("reporter created...")
+		logs.Instance.Log.Debug(context.Background(), "reporter created")
 		instanceTracer = tracer
 	}
 	return instanceTracer
@@ -52,7 +50,7 @@ func getMiddleware() interface{} {
 	tracer := getTracer().(*go2sky.Tracer)
 	middleware, err := http2.NewServerMiddleware(tracer)
 	if err != nil {
-		log.Fatalf("create server middleware error %v \n", err)
+		logs.Instance.Log.Error(context.Background(), "error creating server middleware", zap.Error(err))
 		return nil
 	}
 	return middleware
@@ -61,12 +59,12 @@ func getMiddleware() interface{} {
 func getClient() *http.Client   {
 	tracer := getTracer().(*go2sky.Tracer)
 	if tracer == nil {
-		log.Fatalf("recovering tracer error\n")
+		logs.Instance.Log.Warn(context.Background(), "error trying to recover tracer")
 		return nil
 	}
 	client, err := http2.NewClient(tracer)
 	if err != nil {
-		log.Fatalf("create client error %v \n", err)
+		logs.Instance.Log.Debug(context.Background(), "error trying to create client", zap.Error(err))
 		return nil
 	}
 	return client

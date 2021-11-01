@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
+	"go.uber.org/zap"
 	"log"
 	"strings"
 	"time"
@@ -21,6 +24,7 @@ func (u *util) ExtractAndJoinByField(sources *[]interface{}, field string, sep s
 		src, _ := json.Marshal(&source)
 		err := json.Unmarshal(src, &m)
 		if err != nil {
+			logs.Instance.Log.Error(context.Background(), "error trying to unmarshal", zap.Error(err))
 			log.Fatal(err)
 		}
 		extracted = append(extracted, m[field].(string))

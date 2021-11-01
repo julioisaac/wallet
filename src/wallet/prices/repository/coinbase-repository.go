@@ -1,11 +1,14 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	currencies "github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
 	errors2 "github.com/pkg/errors"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"strconv"
@@ -38,6 +41,7 @@ func (c *coinBaseRepo) GetPrices(cryptoCurrencies, currencies *[]interface{}) (*
 	var cryptos = buildCryptoCurrencies(cryptoCurrencies)
 
 	if currenciesIds == "" || cryptos == nil {
+		logs.Instance.Log.Warn(context.Background(), "error trying to extract currencies")
 		return nil, errors.New("error trying to extract currencies")
 	}
 
@@ -53,6 +57,7 @@ func (c *coinBaseRepo) GetPrices(cryptoCurrencies, currencies *[]interface{}) (*
 
 		coinBasePrices, err1 := buildCoinBasePriceByBody(resp.Body)
 		if err1 != nil {
+			logs.Instance.Log.Error(context.Background(), "error trying to build CoinBasePrice by Body", zap.Error(err1))
 			return nil, err1
 		}
 
@@ -70,7 +75,7 @@ func (c *coinBaseRepo) GetPrices(cryptoCurrencies, currencies *[]interface{}) (*
 func (c *coinBaseRepo) DoRequest(params map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", c.Url, nil)
 	if err != nil {
-		// log error
+		logs.Instance.Log.Error(context.Background(), "error trying to create new request "+c.Url, zap.Error(err))
 		return nil, errors2.Wrap(err, "error trying to create new request "+c.Url)
 	}
 	q := req.URL.Query()
@@ -79,7 +84,7 @@ func (c *coinBaseRepo) DoRequest(params map[string]string) (*http.Response, erro
 
 	resp, err1 := c.Client.Do(req)
 	if err1 != nil {
-		// log error
+		logs.Instance.Log.Error(context.Background(), "error trying to do request "+c.Url, zap.Error(err1))
 		return nil, errors2.Wrap(err1, "error trying to do request "+c.Url)
 	}
 	return resp, err1
@@ -107,7 +112,8 @@ func extractCoinBasePrices(coinBasePrices *CoinBasePrice, currenciesIds string) 
 		rate := coinBasePrices.Data.Rates[strings.ToUpper(id)]
 		value, err := strconv.ParseFloat(rate, 64)
 		if err != nil {
-			return nil, errors2.Wrap(err, "error trying to parse rate from CoinBase ")
+			logs.Instance.Log.Error(context.Background(), "error trying to parse rate from CoinBase", zap.Error(err))
+			return nil, errors2.Wrap(err, "error trying to parse rate from CoinBase")
 		}
 		currenciesPrices[id] = value
 	}

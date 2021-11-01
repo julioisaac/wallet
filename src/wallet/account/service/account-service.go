@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"errors"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/helpers/utils"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
@@ -9,6 +11,7 @@ import (
 	entity2 "github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
 	utils2 "github.com/julioisaac/daxxer-api/src/wallet/utils"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -36,6 +39,7 @@ func (s *accountService) Create(account *entity.Account) error {
 	var query = utils2.QueryUtil().Build("username", account.UserName)
 	_ = s.accountRepo.FindOne(query, &storedAccount)
 	if storedAccount.UserName != "" {
+		logs.Instance.Log.Warn(context.Background(), "the account: '"+ account.UserName+"' already exists")
 		err := errors.New("the account already exists")
 		return err
 	}
@@ -47,6 +51,7 @@ func (s *accountService) Deposit(transaction *entity.Transaction) error {
 	var queryCrypto = utils2.QueryUtil().Build("Symbol", transaction.Amount.Currency)
 	err := s.cryptoCurrencyRepo.FindOne(queryCrypto, &cryptoCurrency)
 	if err != nil {
+		logs.Instance.Log.Warn(context.Background(), transaction.Amount.Currency+" is not supported yet", zap.Error(err))
 		return errors.New(transaction.Amount.Currency+" is not supported yet")
 	}
 
@@ -55,10 +60,12 @@ func (s *accountService) Deposit(transaction *entity.Transaction) error {
 	var query = utils2.QueryUtil().Build("username", transaction.UserName)
 	err1 := s.accountRepo.FindOne(query, &account)
 	if err1 != nil {
+		logs.Instance.Log.Warn(context.Background(), "account: '"+transaction.UserName+"'  not found", zap.Error(err1))
 		return errors.New("account not found")
 	}
 	err2 := s.execTransaction(account.Deposit, transaction)
 	if err2 != nil {
+		logs.Instance.Log.Error(context.Background(), "error trying to execute deposit to account"+transaction.UserName, zap.Error(err2))
 		return err2
 	}
 	return nil
@@ -70,10 +77,12 @@ func (s *accountService) Withdraw(transaction *entity.Transaction) error {
 	var query = utils2.QueryUtil().Build("username", transaction.UserName)
 	err := s.accountRepo.FindOne(query, &account)
 	if err != nil {
+		logs.Instance.Log.Warn(context.Background(), "account: '"+transaction.UserName+"'  not found", zap.Error(err))
 		return errors.New("account not found")
 	}
 	err1 := s.execTransaction(account.Withdraw, transaction)
 	if err1 != nil {
+		logs.Instance.Log.Error(context.Background(), "error trying to execute withdraw from account"+transaction.UserName, zap.Error(err1))
 		return err1
 	}
 
@@ -84,6 +93,7 @@ func (s *accountService) Histories(user string, page, limit int, sort int, start
 	var endDt = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, endDate.Nanosecond(), endDate.Location())
 	var query = bson.M{ "eventtime": bson.M{ "$gte": startDate, "$lte": endDt }, "username": user}
 	var histories = s.historyRepo.FindAll(page, limit, sort, query, new(entity.History))
+	logs.Instance.Log.Debug(context.Background(), "returning histories from account: "+user)
 	return histories
 }
 
@@ -92,6 +102,7 @@ func (s *accountService) Balance(username string) *entity.Balances {
 	var query = utils2.QueryUtil().Build("username", username)
 	err := s.accountRepo.FindOne(query, &account)
 	if err != nil {
+		logs.Instance.Log.Warn(context.Background(), "account: '"+username+"'  not found", zap.Error(err))
 		return nil
 	}
 
@@ -132,6 +143,7 @@ func (s *accountService) execTransaction(operation func(entity.Amount) (*entity.
 func (s *accountService) saveHistory(transaction *entity.Transaction) error {
 	err := s.historyRepo.Insert(buildHistory(transaction))
 	if err != nil {
+		logs.Instance.Log.Error(context.Background(), "error saving history to account: "+transaction.UserName, zap.Error(err))
 		return err
 	}
 	return nil

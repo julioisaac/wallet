@@ -42,8 +42,8 @@ var (
 )
 
 func main() {
-	metrics.Setup()
 	logConfig.Init()
+	metrics.Setup()
 	dbConfig.Init()
 
 	//update prices interval config or env

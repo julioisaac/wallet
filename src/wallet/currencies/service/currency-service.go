@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"errors"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	utils2 "github.com/julioisaac/daxxer-api/src/wallet/utils"
@@ -26,10 +28,12 @@ func NewCurrencyService(currencyRepo repository.DBRepository) CurrencyService {
 
 func (s *currencyService) Validate(currency *entity.Currency) error {
 	if currency.Id == "" {
+		logs.Instance.Log.Warn(context.Background(), "Currency.Id must not be empty")
 		err := errors.New("Currency.Id must not be empty")
 		return err
 	}
 	if currency.Name == "" {
+		logs.Instance.Log.Warn(context.Background(), "Currency.Name must not be empty")
 		err := errors.New("Currency.Name must not be empty")
 		return err
 	}
