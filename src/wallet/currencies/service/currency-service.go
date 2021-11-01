@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
+	utils2 "github.com/julioisaac/daxxer-api/src/wallet/utils"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -49,7 +50,8 @@ func (s *currencyService) Upsert(currency *entity.Currency) error {
 
 func (s *currencyService) FindById(id string) (*entity.Currency, error) {
 	var currency = entity.Currency{}
-	var query = `{"id": "`+id+`"}`
+	var query = utils2.QueryUtil().Build("id", id)
+
 	err := s.currencyRepo.FindOne(query, &currency)
 	if err != nil {
 		return nil, err

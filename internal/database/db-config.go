@@ -1,4 +1,4 @@
-package storage
+package database
 
 type DBConfig interface {
 	Init()

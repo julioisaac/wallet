@@ -2,8 +2,8 @@ package mongodb
 
 import (
 	"context"
+	"github.com/julioisaac/daxxer-api/internal/database/mongodb"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
-	"github.com/julioisaac/daxxer-api/storage/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"

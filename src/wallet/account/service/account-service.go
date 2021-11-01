@@ -7,6 +7,7 @@ import (
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
 	entity3 "github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	entity2 "github.com/julioisaac/daxxer-api/src/wallet/prices/entity"
+	utils2 "github.com/julioisaac/daxxer-api/src/wallet/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 )
@@ -32,7 +33,7 @@ func NewAccountService(accountRepo, cryptoCurrencyRepo, historyRepo, pricesRepo 
 
 func (s *accountService) Create(account *entity.Account) error {
 	var storedAccount entity.Account
-	var query = `{"username": "`+account.UserName+`"}`
+	var query = utils2.QueryUtil().Build("username", account.UserName)
 	_ = s.accountRepo.FindOne(query, &storedAccount)
 	if storedAccount.UserName != "" {
 		err := errors.New("the account already exists")
@@ -43,7 +44,7 @@ func (s *accountService) Create(account *entity.Account) error {
 
 func (s *accountService) Deposit(transaction *entity.Transaction) error {
 	var cryptoCurrency = entity3.CryptoCurrency{}
-	var queryCrypto = `{"symbol": "`+transaction.Amount.Currency+`"}`
+	var queryCrypto = utils2.QueryUtil().Build("symbol", transaction.Amount.Currency)
 	err := s.cryptoCurrencyRepo.FindOne(queryCrypto, &cryptoCurrency)
 	if err != nil {
 		return errors.New(transaction.Amount.Currency+" is not supported yet")
@@ -51,7 +52,7 @@ func (s *accountService) Deposit(transaction *entity.Transaction) error {
 
 	var account = entity.Account{}
 	transaction.Type = "deposit"
-	var query = `{"username": "`+transaction.UserName+`"}`
+	var query = utils2.QueryUtil().Build("username", transaction.UserName)
 	err1 := s.accountRepo.FindOne(query, &account)
 	if err1 != nil {
 		return errors.New("account not found")
@@ -66,7 +67,7 @@ func (s *accountService) Deposit(transaction *entity.Transaction) error {
 func (s *accountService) Withdraw(transaction *entity.Transaction) error {
 	var account = entity.Account{}
 	transaction.Type = "withdraw"
-	var query = `{"username": "`+transaction.UserName+`"}`
+	var query = utils2.QueryUtil().Build("username", transaction.UserName)
 	err := s.accountRepo.FindOne(query, &account)
 	if err != nil {
 		return errors.New("account not found")
@@ -88,7 +89,7 @@ func (s *accountService) Histories(user string, page, limit int, sort int, start
 
 func (s *accountService) Balance(username string) *entity.Balances {
 	var account = entity.Account{}
-	var query = `{"username": "`+username+`"}`
+	var query = utils2.QueryUtil().Build("username", username)
 	err := s.accountRepo.FindOne(query, &account)
 	if err != nil {
 		return nil
@@ -97,7 +98,7 @@ func (s *accountService) Balance(username string) *entity.Balances {
 	var byCryptos []entity.BalanceByCrypto
 	for _, amount := range account.Amounts {
 		var price = entity2.Price{}
-		var queryPrice = `{"cryptocurrency": "`+amount.Id+`"}`
+		var queryPrice = utils2.QueryUtil().Build("cryptocurrency", amount.Id)
 		s.pricesRepo.FindOne(queryPrice, &price)
 		totalByCurrency := calcTotalByCurrency(price.Currencies, amount.Value)
 		byCrypto := buildBalanceByCrypto(price, amount, totalByCurrency)

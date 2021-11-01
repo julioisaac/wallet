@@ -1,6 +1,9 @@
 package main
 
 import (
+	"github.com/julioisaac/daxxer-api/internal/database"
+	"github.com/julioisaac/daxxer-api/internal/database/mongodb"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/metrics"
 	"github.com/julioisaac/daxxer-api/routers"
 	"github.com/julioisaac/daxxer-api/routers/gin"
@@ -13,15 +16,14 @@ import (
 	controller2 "github.com/julioisaac/daxxer-api/src/wallet/prices/controller"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
-	"github.com/julioisaac/daxxer-api/storage"
-	"github.com/julioisaac/daxxer-api/storage/mongodb"
 	"net/http"
 	"time"
 )
 
 var (
-	dbConfig   storage.DBConfig = mongodb.NewMongoConfig()
-	httpRouter routers.Router   = gin.NewGinRouter()
+	logConfig  logs.ILog         = logs.NewZapLogger()
+	dbConfig   database.DBConfig = mongodb.NewMongoConfig()
+	httpRouter routers.Router    = gin.NewGinRouter()
 	daxxerTicker      = ticker.NewDaxxerTicker()
 
 	//db name and collections config or env
@@ -41,6 +43,7 @@ var (
 
 func main() {
 	metrics.Setup()
+	logConfig.Init()
 	dbConfig.Init()
 
 	//update prices interval config or env

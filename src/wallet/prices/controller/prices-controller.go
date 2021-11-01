@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
 	service2 "github.com/julioisaac/daxxer-api/src/wallet/prices/service"
@@ -21,6 +23,7 @@ func NewPricesController() *pricesController {
 func (c *pricesController) GetAll(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
 	prices, _ := priceService.GetAll()
+	logs.Instance.Log.Debug(context.Background(), "prices request success")
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode(prices)
 }

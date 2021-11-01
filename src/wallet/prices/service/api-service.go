@@ -1,9 +1,11 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
@@ -31,6 +33,7 @@ func (s *apiService) Update() error {
 	cryptoCurrencies := s.cryptoRepo.FindAll(0, 100, 1, bson.M{}, new(entity.CryptoCurrency))
 	currencies := s.currencyRepo.FindAll(0, 100, 1, bson.M{}, new(entity.Currency))
 	if cryptoCurrencies == nil || len(cryptoCurrencies) == 0 || currencies == nil || len(currencies) == 0 {
+		logs.Instance.Log.Info(context.Background(), "no currencies to update")
 		return errors.New("no currencies to update")
 	}
 	// log info updating prices {time} from {externalService}
@@ -48,7 +51,7 @@ func (s *apiService) Update() error {
 		err2 := s.pricesRepo.Upsert(selector, update)
 		if err2 != nil {
 			priceStr, _ := json.Marshal(price)
-			// log error
+			logs.Instance.Log.Error(context.Background(), "error trying to upsert price "+string(priceStr)+" from "+price.ExchangeDataBy)
 			return errors2.Wrap(err, "error trying to upsert price "+string(priceStr)+" from "+price.ExchangeDataBy)
 		}
 	}
