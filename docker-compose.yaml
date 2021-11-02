@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3'
 
 services:
   daxxer-api:
@@ -6,13 +6,17 @@ services:
     build: '.'
     ports:
       - '8000:8000'
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --silent --fail localhost:8000/health-check || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     volumes:
       - './:/go/src/app'
     depends_on:
-      mongo:
-        condition: service_started
+      - mongo
     networks:
-      - daxxer-network
+      - daxxer
 
   mongo:
     image: 'mongo:latest'
@@ -20,8 +24,60 @@ services:
     ports:
       - '27017:27017'
     networks:
-      - daxxer-network
+      - daxxer
+
+  elasticsearch7:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
+    container_name: elasticsearch7
+    restart: always
+    ports:
+      - "9023:9200"
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - daxxer
+    volumes:
+      - elasticsearch7:/usr/share/elasticsearch/data
+
+  oap:
+    image: apache/skywalking-oap-server:8.4.0-es7
+    container_name: oap
+    depends_on:
+      - elasticsearch7
+    links:
+      - elasticsearch7
+    restart: always
+    ports:
+      - "9022:11800"
+      - "9021:12800"
+    networks:
+      - daxxer
+
+  ui:
+    image: apache/skywalking-ui:8.4.0
+    container_name: ui
+    depends_on:
+      - oap
+    links:
+      - oap
+    restart: always
+    ports:
+      - "9020:8080"
+    environment:
+      SW_OAP_ADDRESS: oap:12800
+    networks:
+      - daxxer
 
 networks:
-  daxxer-network:
+  daxxer:
     driver: bridge
+
+volumes:
+  elasticsearch7:
+    driver: local

@@ -1,7 +1,8 @@
 package ticker
 
 import (
-	"fmt"
+	"context"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"reflect"
 	"runtime"
 	"time"
@@ -13,16 +14,15 @@ func NewDaxxerTicker() *ticker {
 	return &ticker{}
 }
 
-func (*ticker) Run(interval time.Duration, f func() error) {
+func (*ticker) Run(ctx context.Context, interval time.Duration, f func(context.Context) error) {
 	go func() {
-		// log info
-		fmt.Printf("starting daxxer ticker for %s\n", GetFunctionName(f))
+		logs.Instance.Log.Debug(context.Background(), "starting daxxer ticker for"+GetFunctionName(f))
 		ticker := time.NewTicker(interval * time.Minute)
 		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
-				f()
+				f(ctx)
 			}
 		}
 	}()

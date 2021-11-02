@@ -1,6 +1,10 @@
 package main
 
 import (
+	"context"
+	"github.com/julioisaac/daxxer-api/internal/database"
+	"github.com/julioisaac/daxxer-api/internal/database/mongodb"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/metrics"
 	"github.com/julioisaac/daxxer-api/routers"
 	"github.com/julioisaac/daxxer-api/routers/gin"
@@ -13,15 +17,12 @@ import (
 	controller2 "github.com/julioisaac/daxxer-api/src/wallet/prices/controller"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
-	"github.com/julioisaac/daxxer-api/storage"
-	"github.com/julioisaac/daxxer-api/storage/mongodb"
-	"net/http"
-	"time"
 )
 
 var (
-	dbConfig   storage.DBConfig = mongodb.NewMongoConfig()
-	httpRouter routers.Router   = gin.NewGinRouter()
+	logConfig  logs.ILog         = logs.NewZapLogger()
+	dbConfig   database.DBConfig = mongodb.NewMongoConfig()
+	httpRouter routers.Router    = gin.NewGinRouter()
 	daxxerTicker      = ticker.NewDaxxerTicker()
 
 	//db name and collections config or env
@@ -29,7 +30,7 @@ var (
 	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "currencies")
 	pricesRepo  repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "prices")
 	// url and timeout in config or env
-	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo("https://api.coingecko.com/api/v3/simple/price", &http.Client{Timeout: 5 * time.Second})
+	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo("https://api.coingecko.com/api/v3/simple/price", metrics.Metric().GetClient())
 	pricesApiService  = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
 	healthCheck                                         = pkg.NewHealthCheck()
@@ -40,11 +41,12 @@ var (
 )
 
 func main() {
-	metrics.Setup()
+	logConfig.Init()
+	httpRouter.SetupTracer()
 	dbConfig.Init()
 
 	//update prices interval config or env
-	daxxerTicker.Run(1, pricesApiService.Update)
+	daxxerTicker.Run(context.TODO(), 1, pricesApiService.Update)
 
 	httpRouter.GET("/health-check", healthCheck.IsAlive)
 
