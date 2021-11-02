@@ -33,7 +33,7 @@ func (s *apiService) Update(ctx context.Context) error {
 	cryptoCurrencies := s.cryptoRepo.FindAll(ctx,0, 100, 1, bson.M{}, new(entity.CryptoCurrency))
 	currencies := s.currencyRepo.FindAll(ctx,0, 100, 1, bson.M{}, new(entity.Currency))
 	if cryptoCurrencies == nil || len(cryptoCurrencies) == 0 || currencies == nil || len(currencies) == 0 {
-		logs.Instance.Log.Info(context.Background(), "no currencies to update")
+		logs.Instance.Log.Info(ctx, "no currencies to update")
 		return errors.New("no currencies to update")
 	}
 	// log info updating prices {time} from {externalService}

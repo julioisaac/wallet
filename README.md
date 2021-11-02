@@ -234,11 +234,18 @@ There is other implementation ```NewCoinBaseApiRepo``` just for tests
 If it is necessary to change the prices api, the ```ApiRepository``` interface must be implemented
 ```go
 // Example
-func NewCoinMarketApiRepo(url string, client HttpClient) ApiRepository {
+func NewCoinMarketApiRepo(client HttpClient) ApiRepository {
     return &coinMarketRepo{
-        Url: url,
+        Url: os.Getenv("API_ENDPOINT"),
         Client: client,
     }
 }
 ...
 ```
+
+## Metrics
+### Apache SkyWalking
+SkyWalking is an open source APM(Application Performance Monitor) system.  
+At first this project(daxxer-api) is using the tool(SkyWalking) to collect some metrics, measure latency with external service, endpoint tracing.  
+When the application is running(by the ./scripts/run.sh) the service can be access http://localhost:9020
+![Metrics, Tracer, Logger](/home/magalu/projects/workspace-go/daxxer-api/docs/skyWalking.gif "Apache SkyWalking")

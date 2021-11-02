@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -27,9 +28,9 @@ type CoinBasePrice struct {
 	}
 }
 
-func NewCoinBaseApiRepo(url string, client HttpClient) ApiRepository {
+func NewCoinBaseApiRepo(client HttpClient) ApiRepository {
 	return &coinBaseRepo{
-		Url: url,
+		Url: os.Getenv("API_ENDPOINT"),
 		Client: client,
 	}
 }
