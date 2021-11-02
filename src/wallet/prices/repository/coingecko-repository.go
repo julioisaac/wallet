@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"os"
 )
 
 var (
@@ -24,9 +25,9 @@ type coinGeckoRepo struct {
 
 type GeckoSimplePrice map[string]map[string]float64
 
-func NewCoinGeckoApiRepo(url string, client HttpClient) ApiRepository {
+func NewCoinGeckoApiRepo(client HttpClient) ApiRepository {
 	return &coinGeckoRepo{
-		Url: url,
+		Url: os.Getenv("API_ENDPOINT"),
 		Client: client,
 	}
 }

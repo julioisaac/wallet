@@ -30,7 +30,7 @@ var (
 	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "currencies")
 	pricesRepo  repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "prices")
 	// url and timeout in config or env
-	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo("https://api.coingecko.com/api/v3/simple/price", metrics.Metric().GetClient())
+	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo(metrics.Metric().GetClient())
 	pricesApiService  = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
 	healthCheck                                         = pkg.NewHealthCheck()

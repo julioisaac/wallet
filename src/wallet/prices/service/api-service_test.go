@@ -33,6 +33,8 @@ type ApiServiceTestSuite struct {
 }
 
 func (suite *ApiServiceTestSuite) SetupSuite() {
+	t := new(testing.T)
+	t.Setenv("API_ENDPOINT", "http://test")
 	logs.NewZapLogger().Init()
 	responseCoinGecko, _ := ioutil.ReadFile("./mock/coingecko-response.json")
 	responseCoinBaseBtc, _ := ioutil.ReadFile("./mock/coinbase-response-btc.json")
@@ -59,7 +61,7 @@ func (suite *ApiServiceTestSuite) TestNoCurrenciesToUpdate() {
 	//given
 	ctx := context.TODO()
 	var cryptoCurrenciesEmpty, currenciesEmpty []interface{}
-	coinGeckoApiRepo := repository2.NewCoinGeckoApiRepo("http://test", &mockClient)
+	coinGeckoApiRepo := repository2.NewCoinGeckoApiRepo(&mockClient)
 	suite.apiService = NewApiService(&mockCryptoRepo, &mockCurrencyRepo, &mockPricesRepo, coinGeckoApiRepo)
 
 	//when
@@ -79,7 +81,7 @@ func (suite *ApiServiceTestSuite) TestErrorWhenGetPrices() {
 	var cryptoCurrenciesError, currenciesError []interface{}
 	cryptoCurrenciesError = append(cryptoCurrenciesError, entity2.Currency{})
 	currenciesError = append(currenciesError, entity2.CryptoCurrency{})
-	coinGeckoApiRepo := repository2.NewCoinGeckoApiRepo("http://test", &mockClient)
+	coinGeckoApiRepo := repository2.NewCoinGeckoApiRepo(&mockClient)
 	suite.apiService = NewApiService(&mockCryptoRepo, &mockCurrencyRepo, &mockPricesRepo, coinGeckoApiRepo)
 
 	//when
@@ -97,7 +99,7 @@ func (suite *ApiServiceTestSuite) TestErrorWhenGetPrices() {
 func (suite *ApiServiceTestSuite) TestSuccessCoinGeckoToPrice() {
 	//given
 	ctx := context.TODO()
-	coinGeckoApiRepo := repository2.NewCoinGeckoApiRepo("http://test", &mockClient)
+	coinGeckoApiRepo := repository2.NewCoinGeckoApiRepo(&mockClient)
 	suite.apiService = NewApiService(&mockCryptoRepo, &mockCurrencyRepo, &mockPricesRepo, coinGeckoApiRepo)
 
 	//when
@@ -117,7 +119,7 @@ func (suite *ApiServiceTestSuite) TestSuccessCoinGeckoToPrice() {
 func (suite *ApiServiceTestSuite) TestSuccessCoinBaseToPrice() {
 	//given
 	ctx := context.TODO()
-	coinGeckoApiRepo := repository2.NewCoinBaseApiRepo("http://test", &mockClient)
+	coinGeckoApiRepo := repository2.NewCoinBaseApiRepo(&mockClient)
 	suite.apiService = NewApiService(&mockCryptoRepo, &mockCurrencyRepo, &mockPricesRepo, coinGeckoApiRepo)
 
 	//when

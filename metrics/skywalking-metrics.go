@@ -25,7 +25,7 @@ func (m *metrics) GetTracer() *go2sky.Tracer {
 	if instanceTracer == nil {
 		logger := log.New(os.Stderr, "daxxer-wallet-api", log.LstdFlags)
 		options := reporter.WithLogger(logger)
-		re, err := reporter.NewGRPCReporter("oap:11800", options)
+		re, err := reporter.NewGRPCReporter(os.Getenv("OAP_SKY_WALKING"), options)
 
 		if err != nil {
 			fmt.Printf("error creating reporter")
