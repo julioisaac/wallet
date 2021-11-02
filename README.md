@@ -40,6 +40,9 @@ $ ./scripts/run.sh
 
 ## API 
 
+### Postman collection
+if you prefer, download this [collection](./docs/daxxer-api.postman_collection.json)
+
 ### Account endpoints
 <details open>
 <summary>Create</summary>

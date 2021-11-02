@@ -149,8 +149,8 @@ func (s *accountService) saveHistory(ctx context.Context, transaction *entity.Tr
 	return nil
 }
 
-func buildHistory(transaction *entity.Transaction) entity.History {
-	return entity.History{
+func buildHistory(transaction *entity.Transaction) *entity.History {
+	return &entity.History{
 		UserName:  transaction.UserName,
 		Type:      transaction.Type,
 		Amount:    transaction.Amount,
