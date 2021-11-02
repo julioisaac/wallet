@@ -12,7 +12,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 FROM alpine:latest
 
 ENV API_ENDPOINT='https://api.coingecko.com/api/v3/simple/price'
+
 ENV MONGODB_URI='mongodb://mongo:27017'
+ENV MONGODB_DB='daxxer'
+ENV MONGODB_COL_ACCOUNT='account'
+ENV MONGODB_COL_CRYPTO_CURRENCIES='crpyto_currencies'
+ENV MONGODB_COL_CURRENCIES='currencies'
+ENV  MONGODB_COL_PRICES='prices'
+ENV MONGODB_COL_HISTORY='account'
+
 ENV OAP_SKY_WALKING='oap:11800'
 
 RUN apk --no-cache add curl

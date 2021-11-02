@@ -8,10 +8,12 @@ import (
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/service"
 	"net/http"
+	"os"
 )
 
 var (
-	cryptoRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "cryptoCurrencies")
+	db1                                   = os.Getenv("MONGODB_DB")
+	cryptoRepo repository.DBRepository = mongodb.NewMongodbRepository(db1, os.Getenv("MONGODB_COL_CRYPTO_CURRENCIES"))
 	cryptoService = service.NewCryptoCurrencyService(cryptoRepo)
 )
 
