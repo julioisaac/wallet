@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
 FROM alpine:latest
 RUN apk --no-cache add curl
+EXPOSE 8000
 WORKDIR /root/
 COPY --from=builder /app .
-EXPOSE 8000
 CMD ["./app"]

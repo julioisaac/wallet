@@ -1,71 +1,61 @@
 package metrics
 
 import (
-	"context"
+	"fmt"
 	"github.com/SkyAPM/go2sky"
 	http2 "github.com/SkyAPM/go2sky/plugins/http"
 	"github.com/SkyAPM/go2sky/reporter"
-	"github.com/julioisaac/daxxer-api/internal/logs"
-	"go.uber.org/zap"
+	"log"
 	"net/http"
-	"sync"
+	"os"
 )
 
-var once sync.Once
-var Instance *Metrics
-var instanceTracer *go2sky.Tracer
+var (
+	instanceTracer *go2sky.Tracer
+	instanceClient *http.Client
+)
 
-func Setup() *Metrics {
-	once.Do(func() {
-		Instance = &Metrics{
-			Tracer:     getTracer(),
-			Middleware: getMiddleware(),
-			Client:     getClient(),
-		}
-	})
-	return Instance
+type metrics struct{}
+
+func Metric() *metrics {
+	return &metrics{}
 }
 
-func getTracer() interface{} {
+func (m *metrics) GetTracer() *go2sky.Tracer {
 	if instanceTracer == nil {
-		re, err := reporter.NewGRPCReporter("skywalking-oap:11800")
+		logger := log.New(os.Stderr, "daxxer-wallet-api", log.LstdFlags)
+		options := reporter.WithLogger(logger)
+		re, err := reporter.NewGRPCReporter("oap:11800", options)
 
 		if err != nil {
-			logs.Instance.Log.Error(context.Background(), "error creating reporter", zap.Error(err))
+			fmt.Printf("error creating reporter")
 			return nil
 		}
 
-		tracer, err := go2sky.NewTracer("daxxer-api", go2sky.WithReporter(re))
+		tracer, err := go2sky.NewTracer("daxxer-api", go2sky.WithReporter(re), go2sky.WithInstance("daxxer-service-1"))
 		if err != nil {
-			logs.Instance.Log.Error(context.Background(), "error creating tracer", zap.Error(err))
+			fmt.Printf("error creating tracer")
 			return nil
 		}
-		logs.Instance.Log.Debug(context.Background(), "reporter created")
+		fmt.Printf("reporter created")
 		instanceTracer = tracer
 	}
 	return instanceTracer
 }
 
-func getMiddleware() interface{} {
-	tracer := getTracer().(*go2sky.Tracer)
-	middleware, err := http2.NewServerMiddleware(tracer)
-	if err != nil {
-		logs.Instance.Log.Error(context.Background(), "error creating server middleware", zap.Error(err))
-		return nil
+func (m *metrics) GetClient() *http.Client   {
+	if instanceClient == nil {
+		tracer := m.GetTracer()
+		if tracer == nil {
+			fmt.Printf("error trying to recover tracer")
+			return nil
+		}
+		client, err := http2.NewClient(tracer)
+		if err != nil {
+			fmt.Printf("error trying to create client")
+			return nil
+		}
+		instanceClient = client
 	}
-	return middleware
-}
-
-func getClient() *http.Client   {
-	tracer := getTracer().(*go2sky.Tracer)
-	if tracer == nil {
-		logs.Instance.Log.Warn(context.Background(), "error trying to recover tracer")
-		return nil
-	}
-	client, err := http2.NewClient(tracer)
-	if err != nil {
-		logs.Instance.Log.Debug(context.Background(), "error trying to create client", zap.Error(err))
-		return nil
-	}
-	return client
+	return instanceClient
 }

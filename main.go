@@ -16,8 +16,6 @@ import (
 	controller2 "github.com/julioisaac/daxxer-api/src/wallet/prices/controller"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
-	"net/http"
-	"time"
 )
 
 var (
@@ -31,7 +29,7 @@ var (
 	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "currencies")
 	pricesRepo  repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "prices")
 	// url and timeout in config or env
-	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo("https://api.coingecko.com/api/v3/simple/price", &http.Client{Timeout: 5 * time.Second})
+	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo("https://api.coingecko.com/api/v3/simple/price", metrics.Metric().GetClient())
 	pricesApiService  = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
 	healthCheck                                         = pkg.NewHealthCheck()
@@ -43,7 +41,7 @@ var (
 
 func main() {
 	logConfig.Init()
-	metrics.Setup()
+	httpRouter.SetupTracer()
 	dbConfig.Init()
 
 	//update prices interval config or env

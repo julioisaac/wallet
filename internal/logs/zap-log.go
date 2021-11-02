@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"fmt"
 	zapplugin "github.com/SkyAPM/go2sky-plugins/zap"
 	"go.uber.org/zap"
 )
@@ -19,12 +20,15 @@ func NewZapLogger() ILog {
 
 func (z *zapConfig) Init() {
 	Instance = &Logger{
-		Log: z.getLogger(),
+		Log: z.GetLogger(),
 	}
 }
 
-func (z *zapConfig) getLogger() *zapplugin.WrapLogger {
-	l, _ := zap.NewProduction()
+func (z *zapConfig) GetLogger() *zapplugin.WrapLogger {
+	l, err := zap.NewProduction()
+	if err != nil {
+		fmt.Errorf("error creating zap new production")
+	}
 	logger := zapplugin.WrapWithContext(l)
 	return logger
 }

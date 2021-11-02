@@ -2,7 +2,6 @@ package gin
 
 import (
 	"fmt"
-	"github.com/SkyAPM/go2sky"
 	v3 "github.com/SkyAPM/go2sky-plugins/gin/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/julioisaac/daxxer-api/metrics"
@@ -17,12 +16,12 @@ var (
 )
 
 func NewGinRouter() routers.Router {
+	gin.SetMode(gin.ReleaseMode)
 	return &ginRouter{}
 }
 
 func (g *ginRouter) SetupTracer() {
-	tracer := metrics.Instance.Tracer.(*go2sky.Tracer)
-	gin.SetMode(gin.ReleaseMode)
+	tracer := metrics.Metric().GetTracer()
 	ginDispatcher.Use(v3.Middleware(ginDispatcher, tracer))
 }
 
