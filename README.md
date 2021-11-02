@@ -245,7 +245,7 @@ func NewCoinMarketApiRepo(client HttpClient) ApiRepository {
 
 ## Metrics
 ### Apache SkyWalking
-SkyWalking is an open source APM(Application Performance Monitor) system.  
+[SkyWalking](https://github.com/apache/skywalking) is an open source APM(Application Performance Monitor) system.  
 At first this project(daxxer-api) is using the tool(SkyWalking) to collect some metrics, measure latency with external service, endpoint tracing.  
 When the application is running(by the ./scripts/run.sh) the service can be access http://localhost:9020
-![Metrics, Tracer, Logger](/home/magalu/projects/workspace-go/daxxer-api/docs/skyWalking.gif "Apache SkyWalking")
+![Metrics, Tracer, Logger](./docs/skyWalking.gif "Apache SkyWalking")
