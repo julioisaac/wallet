@@ -31,7 +31,7 @@ func (c *cryptoController) Upsert(response http.ResponseWriter, request *http.Re
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "error trying decode crypto currency upsert")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte(`{error: Error trying decode}`))
+		response.Write([]byte(`{"error": ""Error trying decode"}`))
 		return
 	}
 	err = cryptoService.Validate(request.Context(), &crypto)

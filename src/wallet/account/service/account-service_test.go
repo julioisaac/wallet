@@ -81,7 +81,7 @@ func (suite *AccountServiceTestSuite) TestCryptoNotFoundWhenDeposit() {
 	}
 
 	//when
-	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"Symbol": "ada"}`, &entity3.CryptoCurrency{}).Return(errors.New("ada is not supported yet"))
+	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"symbol": "ada"}`, &entity3.CryptoCurrency{}).Return(errors.New("ada is not supported yet"))
 
 	//expected
 	err := suite.accountService.Deposit(ctx, &incomingTransaction)
@@ -103,7 +103,7 @@ func (suite *AccountServiceTestSuite) TestAccountNotFoundWhenDeposit() {
 	}
 
 	//when
-	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"Symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
+	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
 		cryptoCurrency := args.Get(2).(*entity3.CryptoCurrency)
 		cryptoCurrency.Symbol = "eth"
 		cryptoCurrency.Id = "ethereum"
@@ -129,7 +129,7 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenDeposit() {
 	}
 
 	//when
-	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"Symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
+	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
 		cryptoCurrency := args.Get(2).(*entity3.CryptoCurrency)
 		cryptoCurrency.Symbol = "eth"
 		cryptoCurrency.Id = "ethereum"

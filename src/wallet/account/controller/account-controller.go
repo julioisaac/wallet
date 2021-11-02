@@ -40,7 +40,7 @@ func (*controller) Create(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "error trying decode account create")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte(`{"error": "Error trying decode"}`))
+		response.Write([]byte(`{"error": "Error trying decode account"}`))
 		return
 	}
 	err = accountService.Create(request.Context(), &account)
@@ -50,9 +50,13 @@ func (*controller) Create(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "account create success user: "+account.UserName)
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(account)
+	err = json.NewEncoder(response).Encode(account)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying encode account: "+account.UserName)
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "account create success user: "+account.UserName)
 }
 
 func (*controller) Deposit(response http.ResponseWriter, request *http.Request) {
@@ -62,7 +66,7 @@ func (*controller) Deposit(response http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "error trying decode transaction deposit")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte(`{error: Error trying decode}`))
+		response.Write([]byte(`{"error": "Error trying decode transaction"}`))
 		return
 	}
 	err = accountService.Deposit(request.Context(), &transaction)
@@ -89,7 +93,7 @@ func (*controller) Withdraw(response http.ResponseWriter, request *http.Request)
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "error trying decode transaction withdraw")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte(`{error: Error trying decode}`))
+		response.Write([]byte(`{"error": "Error trying decode transaction"}`))
 		return
 	}
 	err = accountService.Withdraw(request.Context(), &transaction)
@@ -115,7 +119,7 @@ func (*controller) Balance(response http.ResponseWriter, request *http.Request) 
 	if amounts == nil {
 		logs.Instance.Log.Error(request.Context(), "no balance found for this user: "+user)
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte("no balance found for this user"))
+		response.Write([]byte(`{"error": "No balance found for this user"}`))
 		return
 	}
 	response.WriteHeader(http.StatusOK)
@@ -134,14 +138,14 @@ func (*controller) History(response http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "history request - page must be int")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte("Page must be int"))
+		response.Write([]byte(`{"error": "Page must be int"}`))
 		return
 	}
 	limit, err2 := strconv.Atoi(request.URL.Query().Get("limit"))
 	if err2 != nil {
 		logs.Instance.Log.Error(request.Context(), "history request - limit must be int")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte("Limit must be int"))
+		response.Write([]byte(`{"error": ""Limit must be int"}`))
 		return
 	}
 	if limit > 100 {
@@ -155,14 +159,14 @@ func (*controller) History(response http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "history request - bad startDate format")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte("bad startDate format"))
+		response.Write([]byte(`{"error": ""bad startDate format"}`))
 		return
 	}
 	endDt, err := time.Parse("2006-01-02", endDate)
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "history request - bad endDate format")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte("bad endDate format"))
+		response.Write([]byte(`{"error": ""bad endDate format"}`))
 		return
 	}
 

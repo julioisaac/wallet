@@ -30,7 +30,7 @@ func (c *currencyController) Upsert(response http.ResponseWriter, request *http.
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "error trying decode currency upsert")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte(`{error: Error trying decode}`))
+		response.Write([]byte(`{"error": ""Error trying decode"}`))
 		return
 	}
 	err = currencyService.Validate(request.Context(), &currency)
