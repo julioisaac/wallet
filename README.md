@@ -35,7 +35,7 @@ $ cd daxxer-api
 $ ./scripts/run.sh
 
 # After the app started run the script below to create some data
-$ scripts/mongodb-import.sh
+$ . ./scripts/mongodb-import.sh
 ```
 
 ## API 
