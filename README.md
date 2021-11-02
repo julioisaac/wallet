@@ -116,7 +116,7 @@ curl --location --request GET 'http://localhost:8000/prices'
 </details>
 
 ### Currency endpoints
-<details open>
+<details>
 <summary>Create</summary>
 
 ```bash
@@ -149,7 +149,7 @@ curl --location --request DELETE 'http://localhost:8000/currency?id=etd'
 </details>
 
 ### Crypto Currency endpoints
-<details open>
+<details>
 <summary>Create</summary>
 
 ```bash
