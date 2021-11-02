@@ -15,7 +15,7 @@ import (
 )
 
 type ApiService interface {
-	Update() error
+	Update(ctx context.Context) error
 }
 
 type apiService struct {
@@ -29,9 +29,9 @@ func NewApiService(cryptoRepo, currencyRepo, pricesRepo repository.DBRepository,
 	return &apiService{cryptoRepo, currencyRepo, pricesRepo, apiRepo}
 }
 
-func (s *apiService) Update() error {
-	cryptoCurrencies := s.cryptoRepo.FindAll(0, 100, 1, bson.M{}, new(entity.CryptoCurrency))
-	currencies := s.currencyRepo.FindAll(0, 100, 1, bson.M{}, new(entity.Currency))
+func (s *apiService) Update(ctx context.Context) error {
+	cryptoCurrencies := s.cryptoRepo.FindAll(ctx,0, 100, 1, bson.M{}, new(entity.CryptoCurrency))
+	currencies := s.currencyRepo.FindAll(ctx,0, 100, 1, bson.M{}, new(entity.Currency))
 	if cryptoCurrencies == nil || len(cryptoCurrencies) == 0 || currencies == nil || len(currencies) == 0 {
 		logs.Instance.Log.Info(context.Background(), "no currencies to update")
 		return errors.New("no currencies to update")
@@ -48,10 +48,10 @@ func (s *apiService) Update() error {
 		update := bson.M{
 			"$set": price,
 		}
-		err2 := s.pricesRepo.Upsert(selector, update)
+		err2 := s.pricesRepo.Upsert(ctx, selector, update)
 		if err2 != nil {
 			priceStr, _ := json.Marshal(price)
-			logs.Instance.Log.Error(context.Background(), "error trying to upsert price "+string(priceStr)+" from "+price.ExchangeDataBy)
+			logs.Instance.Log.Error(ctx, "error trying to upsert price "+string(priceStr)+" from "+price.ExchangeDataBy)
 			return errors2.Wrap(err, "error trying to upsert price "+string(priceStr)+" from "+price.ExchangeDataBy)
 		}
 	}

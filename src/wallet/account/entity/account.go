@@ -14,9 +14,9 @@ type Account struct {
 	Amounts  []Amount `json:"amounts,omitempty"`
 }
 
-func (account *Account) Deposit(amount Amount) (*Account, error) {
+func (account *Account) Deposit(ctx context.Context, amount Amount) (*Account, error) {
 	if math.Signbit(amount.Value) || amount.Value == 0 {
-		logs.Instance.Log.Warn(context.Background(), "value cannot be zero or negative")
+		logs.Instance.Log.Warn(ctx, "value cannot be zero or negative")
 		return nil, errors.New("value cannot be zero or negative")
 	}
 	if len(account.Amounts) > 0 {
@@ -33,13 +33,13 @@ func (account *Account) Deposit(amount Amount) (*Account, error) {
 		account.Amounts = append(account.Amounts, amount)
 	}
 
-	logs.Instance.Log.Debug(context.Background(), "successfully deposited into account: "+account.UserName)
+	logs.Instance.Log.Debug(ctx, "successfully deposited into account: "+account.UserName)
 	return account, nil
 }
 
-func (account *Account) Withdraw(amount Amount) (*Account, error) {
+func (account *Account) Withdraw(ctx context.Context, amount Amount) (*Account, error) {
 	if math.Signbit(amount.Value) || amount.Value == 0 {
-		logs.Instance.Log.Warn(context.Background(), "value cannot be zero or negative")
+		logs.Instance.Log.Warn(ctx, "value cannot be zero or negative")
 		return nil, errors.New("value cannot be zero or negative")
 	}
 	if len(account.Amounts) > 0 {
@@ -47,7 +47,7 @@ func (account *Account) Withdraw(amount Amount) (*Account, error) {
 			for i, am := range account.Amounts {
 				if am.Currency == amount.Currency {
 					if amount.Value > account.Amounts[i].Value {
-						logs.Instance.Log.Warn(context.Background(), "insufficient "+amount.Currency+" funds")
+						logs.Instance.Log.Warn(ctx, "insufficient "+amount.Currency+" funds")
 						err := fmt.Errorf("insufficient %s funds", amount.Currency)
 						return nil, err
 					}
@@ -55,15 +55,15 @@ func (account *Account) Withdraw(amount Amount) (*Account, error) {
 				}
 			}
 		} else {
-			logs.Instance.Log.Warn(context.Background(), "there is "+amount.Currency+" amount")
+			logs.Instance.Log.Warn(ctx, "there is "+amount.Currency+" amount")
 			return nil, fmt.Errorf("there is no %s amount", amount.Currency)
 		}
 	} else {
-		logs.Instance.Log.Warn(context.Background(), "there is amounts")
+		logs.Instance.Log.Warn(ctx, "there is amounts")
 		return nil, errors.New("there is no amounts")
 	}
 
-	logs.Instance.Log.Debug(context.Background(), "successfully withdrawn from the account: "+account.UserName)
+	logs.Instance.Log.Debug(ctx, "successfully withdrawn from the account: "+account.UserName)
 	return account, nil
 }
 

@@ -1,12 +1,15 @@
 package entity
 
 import (
+	"context"
 	"errors"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestSuccessWhenDeposit(t *testing.T) {
+	logs.NewZapLogger().Init()
 
 	tests := []struct {
 		name  string
@@ -128,7 +131,7 @@ func TestSuccessWhenDeposit(t *testing.T) {
 	}
 	asserts := assert.New(t)
 	for _, test := range tests {
-		account, _ := test.given.Deposit(test.when)
+		account, _ := test.given.Deposit(context.Background(), test.when)
 		asserts.Equal(test.expected, account, test.name)
 	}
 }
@@ -160,7 +163,7 @@ func TestErrorWhenDeposit(t *testing.T) {
 		},
 		expected: errors.New("value cannot be zero or negative"),
 	}
-	_, err := test.given.Deposit(test.when)
+	_, err := test.given.Deposit(context.Background(), test.when)
 	assert.Equal(t, test.expected, err, test.name)
 }
 
@@ -232,7 +235,7 @@ func TestSuccessWhenWithdraw(t *testing.T) {
 	}
 	asserts := assert.New(t)
 	for _, test := range tests {
-		account, _ := test.given.Withdraw(test.when)
+		account, _ := test.given.Withdraw(context.Background(), test.when)
 		asserts.Equal(test.expected, account, test.name)
 	}
 }
@@ -318,7 +321,7 @@ func TestErrorWhenWithdraw(t *testing.T) {
 	}
 	asserts := assert.New(t)
 	for _, test := range tests {
-		_, err := test.given.Withdraw(test.when)
+		_, err := test.given.Withdraw(context.Background(), test.when)
 		asserts.Equal(test.expected, err, test.name)
 	}
 }

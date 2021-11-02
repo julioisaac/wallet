@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/julioisaac/daxxer-api/internal/database"
 	"github.com/julioisaac/daxxer-api/internal/database/mongodb"
 	"github.com/julioisaac/daxxer-api/internal/logs"
@@ -45,7 +46,7 @@ func main() {
 	dbConfig.Init()
 
 	//update prices interval config or env
-	daxxerTicker.Run(1, pricesApiService.Update)
+	daxxerTicker.Run(context.TODO(), 1, pricesApiService.Update)
 
 	httpRouter.GET("/health-check", healthCheck.IsAlive)
 

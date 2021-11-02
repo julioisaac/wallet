@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
@@ -56,16 +57,17 @@ func (suite *ApiServiceTestSuite) SetupTest() {
 
 func (suite *ApiServiceTestSuite) TestNoCurrenciesToUpdate() {
 	//given
+	ctx := context.TODO()
 	var cryptoCurrenciesEmpty, currenciesEmpty []interface{}
 	coinGeckoApiRepo := repository2.NewCoinGeckoApiRepo("http://test", &mockClient)
 	suite.apiService = NewApiService(&mockCryptoRepo, &mockCurrencyRepo, &mockPricesRepo, coinGeckoApiRepo)
 
 	//when
-	mockCryptoRepo.On("FindAll", 0, 100, 1, bson.M{}, new(entity2.CryptoCurrency)).Return(cryptoCurrenciesEmpty)
-	mockCurrencyRepo.On("FindAll", 0, 100, 1, bson.M{}, new(entity2.Currency)).Return(currenciesEmpty)
+	mockCryptoRepo.On("FindAll", ctx, 0, 100, 1, bson.M{}, new(entity2.CryptoCurrency)).Return(cryptoCurrenciesEmpty)
+	mockCurrencyRepo.On("FindAll", ctx, 0, 100, 1, bson.M{}, new(entity2.Currency)).Return(currenciesEmpty)
 
 	//expected
-	err := suite.apiService.Update()
+	err := suite.apiService.Update(ctx)
 	mockCryptoRepo.AssertNumberOfCalls(suite.T(), "FindAll", 1)
 	mockCurrencyRepo.AssertNumberOfCalls(suite.T(), "FindAll", 1)
 	suite.Error(err, "no currencies to update")
@@ -73,6 +75,7 @@ func (suite *ApiServiceTestSuite) TestNoCurrenciesToUpdate() {
 
 func (suite *ApiServiceTestSuite) TestErrorWhenGetPrices() {
 	//given
+	ctx := context.TODO()
 	var cryptoCurrenciesError, currenciesError []interface{}
 	cryptoCurrenciesError = append(cryptoCurrenciesError, entity2.Currency{})
 	currenciesError = append(currenciesError, entity2.CryptoCurrency{})
@@ -80,12 +83,12 @@ func (suite *ApiServiceTestSuite) TestErrorWhenGetPrices() {
 	suite.apiService = NewApiService(&mockCryptoRepo, &mockCurrencyRepo, &mockPricesRepo, coinGeckoApiRepo)
 
 	//when
-	mockCryptoRepo.On("FindAll", 0, 100, 1, bson.M{}, new(entity2.CryptoCurrency)).Return(cryptoCurrenciesError)
-	mockCurrencyRepo.On("FindAll", 0, 100, 1, bson.M{}, new(entity2.Currency)).Return(currenciesError)
+	mockCryptoRepo.On("FindAll", ctx, 0, 100, 1, bson.M{}, new(entity2.CryptoCurrency)).Return(cryptoCurrenciesError)
+	mockCurrencyRepo.On("FindAll", ctx, 0, 100, 1, bson.M{}, new(entity2.Currency)).Return(currenciesError)
 	mockClient.On("Do", mock.Anything).Return(&http.Response{}, errors.New("error trying to get prices"))
 
 	//expected
-	err := suite.apiService.Update()
+	err := suite.apiService.Update(ctx)
 	mockCryptoRepo.AssertNumberOfCalls(suite.T(), "FindAll", 1)
 	mockCurrencyRepo.AssertNumberOfCalls(suite.T(), "FindAll", 1)
 	suite.Error(err, "error trying to get prices")
@@ -93,18 +96,19 @@ func (suite *ApiServiceTestSuite) TestErrorWhenGetPrices() {
 
 func (suite *ApiServiceTestSuite) TestSuccessCoinGeckoToPrice() {
 	//given
+	ctx := context.TODO()
 	coinGeckoApiRepo := repository2.NewCoinGeckoApiRepo("http://test", &mockClient)
 	suite.apiService = NewApiService(&mockCryptoRepo, &mockCurrencyRepo, &mockPricesRepo, coinGeckoApiRepo)
 
 	//when
-	mockCryptoRepo.On("FindAll", 0, 100, 1, bson.M{}, new(entity2.CryptoCurrency)).Return(cryptoCurrencies)
-	mockCurrencyRepo.On("FindAll", 0, 100, 1, bson.M{}, new(entity2.Currency)).Return(currencies)
-	mockPricesRepo.On("Upsert", mock.Anything, mock.Anything).Return(nil)
+	mockCryptoRepo.On("FindAll", ctx, 0, 100, 1, bson.M{}, new(entity2.CryptoCurrency)).Return(cryptoCurrencies)
+	mockCurrencyRepo.On("FindAll", ctx, 0, 100, 1, bson.M{}, new(entity2.Currency)).Return(currencies)
+	mockPricesRepo.On("Upsert", ctx, mock.Anything, mock.Anything).Return(nil)
 	response := &http.Response{Body: ioutil.NopCloser(bytes.NewBufferString(mockCoinGeckoResponse))}
 	mockClient.On("Do", mock.Anything).Return(response, nil)
 
 	//expected
-	err := suite.apiService.Update()
+	err := suite.apiService.Update(ctx)
 	mockClient.AssertNumberOfCalls(suite.T(), "Do", 1)
 	mockPricesRepo.AssertNumberOfCalls(suite.T(), "Upsert", 2)
 	suite.Nil(err)
@@ -112,13 +116,14 @@ func (suite *ApiServiceTestSuite) TestSuccessCoinGeckoToPrice() {
 
 func (suite *ApiServiceTestSuite) TestSuccessCoinBaseToPrice() {
 	//given
+	ctx := context.TODO()
 	coinGeckoApiRepo := repository2.NewCoinBaseApiRepo("http://test", &mockClient)
 	suite.apiService = NewApiService(&mockCryptoRepo, &mockCurrencyRepo, &mockPricesRepo, coinGeckoApiRepo)
 
 	//when
-	mockCryptoRepo.On("FindAll", 0, 100, 1, bson.M{}, new(entity2.CryptoCurrency)).Return(cryptoCurrencies)
-	mockCurrencyRepo.On("FindAll", 0, 100, 1, bson.M{}, new(entity2.Currency)).Return(currencies)
-	mockPricesRepo.On("Upsert", mock.Anything, mock.Anything).Return(nil)
+	mockCryptoRepo.On("FindAll", ctx, 0, 100, 1, bson.M{}, new(entity2.CryptoCurrency)).Return(cryptoCurrencies)
+	mockCurrencyRepo.On("FindAll", ctx, 0, 100, 1, bson.M{}, new(entity2.Currency)).Return(currencies)
+	mockPricesRepo.On("Upsert", ctx, mock.Anything, mock.Anything).Return(nil)
 
 	requestBtc, _ := http.NewRequest("GET", "http://test", nil)
 	qBtc := requestBtc.URL.Query()
@@ -135,7 +140,7 @@ func (suite *ApiServiceTestSuite) TestSuccessCoinBaseToPrice() {
 	mockClient.On("Do", requestEth).Return(responseEth, nil)
 
 	//expected
-	err := suite.apiService.Update()
+	err := suite.apiService.Update(ctx)
 	mockClient.AssertNumberOfCalls(suite.T(), "Do", 2)
 	mockPricesRepo.AssertNumberOfCalls(suite.T(), "Upsert", 2)
 	suite.Nil(err)

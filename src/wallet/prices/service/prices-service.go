@@ -10,7 +10,7 @@ import (
 )
 
 type PricesService interface {
-	GetAll() (*[]interface{}, error)
+	GetAll(ctx context.Context) (*[]interface{}, error)
 }
 
 type pricesService struct {
@@ -21,8 +21,8 @@ func NewPricesService(pricesRepo repository.DBRepository) PricesService {
 	return &pricesService{pricesRepo}
 }
 
-func (s *pricesService) GetAll() (*[]interface{}, error) {
-	currencies := s.pricesRepo.FindAll(0, 100, 1, bson.M{}, new(entity2.Price))
+func (s *pricesService) GetAll(ctx context.Context) (*[]interface{}, error) {
+	currencies := s.pricesRepo.FindAll(ctx,0, 100, 1, bson.M{}, new(entity2.Price))
 	if currencies == nil {
 		logs.Instance.Log.Warn(context.Background(), "there is no prices")
 		return nil, errors.New("there is no prices")

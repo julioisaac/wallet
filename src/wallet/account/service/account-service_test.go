@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"errors"
+	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
 	entity3 "github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
@@ -25,6 +27,7 @@ type AccountServiceTestSuite struct {
 }
 
 func (suite *AccountServiceTestSuite) SetupTest() {
+	logs.NewZapLogger().Init()
 	mockAccountRepo = repository.MockDBRepository{}
 	mockCryptoCurrencyRepo = repository.MockDBRepository{}
 	mockHistoryRepo = repository.MockDBRepository{}
@@ -34,16 +37,17 @@ func (suite *AccountServiceTestSuite) SetupTest() {
 
 func (suite *AccountServiceTestSuite) TestAccountExistsWhenCreate() {
 	//given
+	ctx := context.Background()
 	incomingAccount := entity.Account{UserName: "julio"}
 
 	//when
-	mockAccountRepo.On("FindOne", `{"username": "julio"}`, &entity.Account{}).Return(nil).Run(func(args mock.Arguments) {
-		account := args.Get(1).(*entity.Account)
+	mockAccountRepo.On("FindOne", ctx, `{"username": "julio"}`, &entity.Account{}).Return(nil).Run(func(args mock.Arguments) {
+		account := args.Get(2).(*entity.Account)
 		account.UserName = "julio"
 	})
 
 	//expected
-	err := suite.accountService.Create(&incomingAccount)
+	err := suite.accountService.Create(ctx, &incomingAccount)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
 	suite.Error(err, "the account already exists")
 }
@@ -51,14 +55,15 @@ func (suite *AccountServiceTestSuite) TestAccountExistsWhenCreate() {
 
 func (suite *AccountServiceTestSuite) TestSuccessWhenCreate() {
 	//given
+	ctx := context.TODO()
 	incomingAccount := entity.Account{UserName: "gabi"}
 
 	//when
-	mockAccountRepo.On("FindOne", `{"username": "gabi"}`, &entity.Account{}).Return(nil)
-	mockAccountRepo.On("Insert",  &entity.Account{UserName: "gabi"}).Return(nil)
+	mockAccountRepo.On("FindOne", ctx, `{"username": "gabi"}`, &entity.Account{}).Return(nil)
+	mockAccountRepo.On("Insert",  ctx, &entity.Account{UserName: "gabi"}).Return(nil)
 
 	//expected
-	err := suite.accountService.Create(&incomingAccount)
+	err := suite.accountService.Create(ctx, &incomingAccount)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "Insert", 1)
 	suite.Nil(err)
@@ -66,6 +71,7 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenCreate() {
 
 func (suite *AccountServiceTestSuite) TestCryptoNotFoundWhenDeposit() {
 	//given
+	ctx := context.TODO()
 	incomingTransaction := entity.Transaction{
 		UserName: "gabi",
 		Amount: entity.Amount{
@@ -76,10 +82,10 @@ func (suite *AccountServiceTestSuite) TestCryptoNotFoundWhenDeposit() {
 	}
 
 	//when
-	mockCryptoCurrencyRepo.On("FindOne", `{"Symbol": "ada"}`, &entity3.CryptoCurrency{}).Return(errors.New("ada is not supported yet"))
+	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"Symbol": "ada"}`, &entity3.CryptoCurrency{}).Return(errors.New("ada is not supported yet"))
 
 	//expected
-	err := suite.accountService.Deposit(&incomingTransaction)
+	err := suite.accountService.Deposit(ctx, &incomingTransaction)
 	mockCryptoCurrencyRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "FindOne", 0)
 	suite.Error(err, "ada is not supported yet")
@@ -87,6 +93,7 @@ func (suite *AccountServiceTestSuite) TestCryptoNotFoundWhenDeposit() {
 
 func (suite *AccountServiceTestSuite) TestAccountNotFoundWhenDeposit() {
 	//given
+	ctx := context.TODO()
 	incomingTransaction := entity.Transaction{
 		UserName: "gabi",
 		Amount: entity.Amount{
@@ -97,21 +104,22 @@ func (suite *AccountServiceTestSuite) TestAccountNotFoundWhenDeposit() {
 	}
 
 	//when
-	mockCryptoCurrencyRepo.On("FindOne", `{"Symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
-		cryptoCurrency := args.Get(1).(*entity3.CryptoCurrency)
+	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"Symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
+		cryptoCurrency := args.Get(2).(*entity3.CryptoCurrency)
 		cryptoCurrency.Symbol = "eth"
 		cryptoCurrency.Id = "ethereum"
 	})
-	mockAccountRepo.On("FindOne", `{"username": "gabi"}`, &entity.Account{}).Return(errors.New("account not found"))
+	mockAccountRepo.On("FindOne", ctx, `{"username": "gabi"}`, &entity.Account{}).Return(errors.New("account not found"))
 
 	//expected
-	err := suite.accountService.Deposit(&incomingTransaction)
+	err := suite.accountService.Deposit(ctx, &incomingTransaction)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
 	suite.Error(err, "account not found")
 }
 
 func (suite *AccountServiceTestSuite) TestSuccessWhenDeposit() {
 	//given
+	ctx := context.TODO()
 	incomingTransaction := &entity.Transaction{
 		UserName: "gabi",
 		Amount: entity.Amount{
@@ -122,17 +130,17 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenDeposit() {
 	}
 
 	//when
-	mockCryptoCurrencyRepo.On("FindOne", `{"Symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
-		cryptoCurrency := args.Get(1).(*entity3.CryptoCurrency)
+	mockCryptoCurrencyRepo.On("FindOne", ctx, `{"Symbol": "eth"}`, &entity3.CryptoCurrency{}).Return(nil).Run(func(args mock.Arguments) {
+		cryptoCurrency := args.Get(2).(*entity3.CryptoCurrency)
 		cryptoCurrency.Symbol = "eth"
 		cryptoCurrency.Id = "ethereum"
 	})
-	mockAccountRepo.On("FindOne", `{"username": "gabi"}`, &entity.Account{}).Return(nil)
-	mockAccountRepo.On("Upsert", mock.Anything, mock.Anything).Return(nil)
-	mockHistoryRepo.On("Insert", mock.Anything).Return(nil)
+	mockAccountRepo.On("FindOne", ctx, `{"username": "gabi"}`, &entity.Account{}).Return(nil)
+	mockAccountRepo.On("Upsert", ctx, mock.Anything, mock.Anything).Return(nil)
+	mockHistoryRepo.On("Insert", ctx, mock.Anything).Return(nil)
 
 	//expected
-	err := suite.accountService.Deposit(incomingTransaction)
+	err := suite.accountService.Deposit(ctx, incomingTransaction)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "Upsert", 1)
 	mockHistoryRepo.AssertNumberOfCalls(suite.T(), "Insert", 1)
 	suite.Nil(err)
@@ -140,19 +148,21 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenDeposit() {
 
 func (suite *AccountServiceTestSuite) TestAccountNotFoundWhenWithdraw() {
 	//given
+	ctx := context.TODO()
 	incomingTransaction := entity.Transaction{UserName: "ravi"}
 
 	//when
-	mockAccountRepo.On("FindOne", `{"username": "ravi"}`, &entity.Account{}).Return(errors.New("account not found"))
+	mockAccountRepo.On("FindOne", ctx, `{"username": "ravi"}`, &entity.Account{}).Return(errors.New("account not found"))
 
 	//expected
-	err := suite.accountService.Withdraw(&incomingTransaction)
+	err := suite.accountService.Withdraw(ctx, &incomingTransaction)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
 	suite.Error(err, "account not found")
 }
 
 func (suite *AccountServiceTestSuite) TestSuccessWhenWithdraw() {
 	//given
+	ctx := context.TODO()
 	incomingTransaction := &entity.Transaction{
 		UserName: "ravi",
 		Amount: entity.Amount{
@@ -163,8 +173,8 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenWithdraw() {
 	}
 
 	//when
-	mockAccountRepo.On("FindOne", `{"username": "ravi"}`, &entity.Account{}).Return(nil).Run(func(args mock.Arguments) {
-		account := args.Get(1).(*entity.Account)
+	mockAccountRepo.On("FindOne", ctx, `{"username": "ravi"}`, &entity.Account{}).Return(nil).Run(func(args mock.Arguments) {
+		account := args.Get(2).(*entity.Account)
 		account.UserName = "julio"
 		account.Amounts = []entity.Amount{
 			{
@@ -174,11 +184,11 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenWithdraw() {
 			},
 		}
 	})
-	mockAccountRepo.On("Upsert", mock.Anything, mock.Anything).Return(nil)
-	mockHistoryRepo.On("Insert", mock.Anything).Return(nil)
+	mockAccountRepo.On("Upsert", ctx, mock.Anything, mock.Anything).Return(nil)
+	mockHistoryRepo.On("Insert", ctx, mock.Anything).Return(nil)
 
 	//expected
-	err := suite.accountService.Withdraw(incomingTransaction)
+	err := suite.accountService.Withdraw(ctx, incomingTransaction)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "Upsert", 1)
 	mockHistoryRepo.AssertNumberOfCalls(suite.T(), "Insert", 1)
 	suite.Nil(err)
@@ -186,6 +196,7 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenWithdraw() {
 
 func (suite *AccountServiceTestSuite) TestSuccessBalance() {
 	//given
+	ctx := context.TODO()
 	userName := "ravi"
 	expectedBalances := entity.Balances{
 		User: "ravi",
@@ -209,8 +220,8 @@ func (suite *AccountServiceTestSuite) TestSuccessBalance() {
 	}
 
 	//when
-	mockAccountRepo.On("FindOne", `{"username": "ravi"}`, &entity.Account{}).Return(nil).Run(func(args mock.Arguments) {
-		account := args.Get(1).(*entity.Account)
+	mockAccountRepo.On("FindOne", ctx, `{"username": "ravi"}`, &entity.Account{}).Return(nil).Run(func(args mock.Arguments) {
+		account := args.Get(2).(*entity.Account)
 		account.UserName = "ravi"
 		account.Amounts = []entity.Amount{
 			{
@@ -220,8 +231,8 @@ func (suite *AccountServiceTestSuite) TestSuccessBalance() {
 			},
 		}
 	})
-	mockPricesRepo.On("FindOne", `{"cryptocurrency": "bitcoin"}`, &entity2.Price{}).Return(nil).Run(func(args mock.Arguments) {
-		price := args.Get(1).(*entity2.Price)
+	mockPricesRepo.On("FindOne", ctx, `{"cryptocurrency": "bitcoin"}`, &entity2.Price{}).Return(nil).Run(func(args mock.Arguments) {
+		price := args.Get(2).(*entity2.Price)
 		price.CryptoCurrency = "bitcoin"
 		price.Currencies = map[string]float64{
 			"eur": 5266, "usd": 61227.755,
@@ -229,11 +240,11 @@ func (suite *AccountServiceTestSuite) TestSuccessBalance() {
 		price.ExchangeDataBy = "CoinGecko"
 		price.LastUpdate = time.Date(2020, time.October, 31, 6, 30, 01, 0, time.UTC)
 	})
-	mockAccountRepo.On("Upsert", mock.Anything, mock.Anything).Return(nil)
-	mockHistoryRepo.On("Insert", mock.Anything).Return(nil)
+	mockAccountRepo.On("Upsert", ctx, mock.Anything, mock.Anything).Return(nil)
+	mockHistoryRepo.On("Insert", ctx, mock.Anything).Return(nil)
 
 	//expected
-	balances := suite.accountService.Balance(userName)
+	balances := suite.accountService.Balance(ctx, userName)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
 	mockPricesRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
 	suite.Equal(&expectedBalances, balances)
@@ -241,13 +252,14 @@ func (suite *AccountServiceTestSuite) TestSuccessBalance() {
 
 func (suite *AccountServiceTestSuite) TestErrorBalance() {
 	//given
+	ctx := context.TODO()
 	userName := "ravi"
 
 	//when
-	mockAccountRepo.On("FindOne", `{"username": "ravi"}`, &entity.Account{}).Return(errors.New("not found"))
+	mockAccountRepo.On("FindOne", ctx, `{"username": "ravi"}`, &entity.Account{}).Return(errors.New("not found"))
 
 	//expected
-	balances := suite.accountService.Balance(userName)
+	balances := suite.accountService.Balance(ctx, userName)
 	mockAccountRepo.AssertNumberOfCalls(suite.T(), "FindOne", 1)
 	mockPricesRepo.AssertNumberOfCalls(suite.T(), "FindOne", 0)
 	suite.Nil(balances)
@@ -256,6 +268,7 @@ func (suite *AccountServiceTestSuite) TestErrorBalance() {
 
 func (suite *AccountServiceTestSuite) TestSuccessHistories() {
 	//given
+	ctx := context.TODO()
 	userName := "ravi"
 	page := 0
 	limit := 100
@@ -286,16 +299,17 @@ func (suite *AccountServiceTestSuite) TestSuccessHistories() {
 	})
 
 	//when
-	mockHistoryRepo.On("FindAll", page, limit, order, mock.Anything, new(entity.History)).Return(expectedHistories)
+	mockHistoryRepo.On("FindAll", ctx, page, limit, order, mock.Anything, new(entity.History)).Return(expectedHistories)
 
 	//expected
-	histories := suite.accountService.Histories(userName, page, limit, order, startDt, endDt)
+	histories := suite.accountService.Histories(ctx, userName, page, limit, order, startDt, endDt)
 	mockHistoryRepo.AssertNumberOfCalls(suite.T(), "FindAll", 1)
 	suite.NotNil(histories)
 }
 
 func (suite *AccountServiceTestSuite) TestEmptyHistories() {
 	//given
+	ctx := context.TODO()
 	userName := "ravi"
 	page := 0
 	limit := 100
@@ -306,10 +320,10 @@ func (suite *AccountServiceTestSuite) TestEmptyHistories() {
 	var expectedHistories []interface{}
 
 	//when
-	mockHistoryRepo.On("FindAll", page, limit, order, mock.Anything, new(entity.History)).Return(expectedHistories)
+	mockHistoryRepo.On("FindAll", ctx, page, limit, order, mock.Anything, new(entity.History)).Return(expectedHistories)
 
 	//expected
-	histories := suite.accountService.Histories(userName, page, limit, order, startDt, endDt)
+	histories := suite.accountService.Histories(ctx, userName, page, limit, order, startDt, endDt)
 	mockHistoryRepo.AssertNumberOfCalls(suite.T(), "FindAll", 1)
 	suite.Empty(histories)
 }
