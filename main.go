@@ -17,7 +17,6 @@ import (
 	controller2 "github.com/julioisaac/daxxer-api/src/wallet/prices/controller"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
-	"os"
 )
 
 var (
@@ -26,10 +25,9 @@ var (
 	httpRouter   routers.Router    = gin.NewGinRouter()
 	daxxerTicker                   = ticker.NewDaxxerTicker()
 
-	db                                   = os.Getenv("MONGODB_DB")
-	cryptoRepo   repository.DBRepository = mongodb2.NewMongodbRepository(db, os.Getenv("MONGODB_COL_CRYPTO_CURRENCIES"))
-	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository(db, os.Getenv("MONGODB_COL_CURRENCIES"))
-	pricesRepo   repository.DBRepository = mongodb2.NewMongodbRepository(db, os.Getenv("MONGODB_COL_PRICES"))
+	cryptoRepo   repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "crypto_currencies")
+	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "currencies")
+	pricesRepo   repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "prices")
 	apiRepo            api.ApiRepository = api.NewCoinGeckoApiRepo(metrics.Metric().GetClient())
 	pricesApiService                   	 = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
@@ -45,7 +43,6 @@ func main() {
 	httpRouter.SetupTracer()
 	dbConfig.Init()
 
-	//update prices interval config or env
 	daxxerTicker.Run(context.TODO(), 1, pricesApiService.Update)
 
 	httpRouter.GET("/health-check", healthCheck.IsAlive)

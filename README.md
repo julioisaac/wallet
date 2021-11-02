@@ -31,11 +31,11 @@ You must have installed [Docker](https://www.docker.com/).
 # Access the project folder
 $ cd daxxer-api
 
-# Run to set envs
-$ ./scripts/setup.sh
-
 # Run the script to build the app's docker image, download dependencies and run the app
 $ ./scripts/run.sh
+
+# After the app started run the script below to create some data
+$ scripts/mongodb-import.sh
 ```
 
 ## API 

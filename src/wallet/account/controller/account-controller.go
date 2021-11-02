@@ -9,17 +9,15 @@ import (
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/service"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 )
 
 var (
-	db                                  = os.Getenv("MONGODB_DB")
-	accountRepo repository.DBRepository = mongodb.NewMongodbRepository(db, os.Getenv("MONGODB_COL_ACCOUNT"))
-	cryptoRepo repository.DBRepository  = mongodb.NewMongodbRepository(db, os.Getenv("MONGODB_COL_CRYPTO_CURRENCIES"))
-	historyRepo repository.DBRepository = mongodb.NewMongodbRepository(db, os.Getenv("MONGODB_COL_HISTORY"))
-	pricesRepo  repository.DBRepository = mongodb.NewMongodbRepository(db, os.Getenv("MONGODB_COL_PRICES"))
+	accountRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "account")
+	cryptoRepo repository.DBRepository  = mongodb.NewMongodbRepository("daxxer", "crypto_currencies")
+	historyRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "history")
+	pricesRepo  repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
 	accountService = service.NewAccountService(accountRepo, cryptoRepo, historyRepo, pricesRepo)
 )
 
