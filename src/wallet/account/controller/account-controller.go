@@ -9,16 +9,22 @@ import (
 	"github.com/julioisaac/daxxer-api/src/wallet/account/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/account/service"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
 
 var (
-	accountRepo    repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "account")
-	cryptoRepo     repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "crypto_currencies")
-	historyRepo    repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "history")
-	pricesRepo     repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
-	accountService                         = service.NewAccountService(accountRepo, cryptoRepo, historyRepo, pricesRepo)
+	db                                           = os.Getenv("MONGODB_DB")
+	accountCollection                            = os.Getenv("MONGODB_COL_ACCOUNT")
+	cryptoCollection                             = os.Getenv("MONGODB_COL_CRYPTO_CURRENCIES")
+	currenciesCollection                         = os.Getenv("MONGODB_COL_CURRENCIES")
+	pricesCollection                             = os.Getenv("MONGODB_COL_PRICES")
+	accountRepo          repository.DBRepository = mongodb.NewMongodbRepository(db, accountCollection)
+	cryptoRepo           repository.DBRepository = mongodb.NewMongodbRepository(db, cryptoCollection)
+	historyRepo          repository.DBRepository = mongodb.NewMongodbRepository(db, currenciesCollection)
+	pricesRepo           repository.DBRepository = mongodb.NewMongodbRepository(db, pricesCollection)
+	accountService                               = service.NewAccountService(accountRepo, cryptoRepo, historyRepo, pricesRepo)
 )
 
 type controller struct{}

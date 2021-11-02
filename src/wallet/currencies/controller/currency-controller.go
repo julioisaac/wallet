@@ -8,11 +8,13 @@ import (
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/service"
 	"net/http"
+	"os"
 )
 
 var (
-	currencyRepo    repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "currencies")
-	currencyService                         = service.NewCurrencyService(currencyRepo)
+	currenciesCollection                         = os.Getenv("MONGODB_COL_CURRENCIES")
+	currencyRepo         repository.DBRepository = mongodb.NewMongodbRepository(db, currenciesCollection)
+	currencyService                              = service.NewCurrencyService(currencyRepo)
 )
 
 type currencyController struct{}

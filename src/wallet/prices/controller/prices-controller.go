@@ -8,14 +8,17 @@ import (
 	pricesService "github.com/julioisaac/daxxer-api/src/wallet/prices/service"
 	"go.uber.org/zap"
 	"net/http"
+	"os"
 )
 
 var (
-	priceRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
-	priceService = pricesService.NewPricesService(priceRepo)
+	db                                       = os.Getenv("MONGODB_DB")
+	pricesCollection                         = os.Getenv("MONGODB_COL_PRICES")
+	priceRepo        repository.DBRepository = mongodb.NewMongodbRepository(db, pricesCollection)
+	priceService                             = pricesService.NewPricesService(priceRepo)
 )
 
-type pricesController struct {}
+type pricesController struct{}
 
 func NewPricesController() *pricesController {
 	return &pricesController{}
@@ -24,7 +27,7 @@ func (c *pricesController) GetAll(response http.ResponseWriter, request *http.Re
 	response.Header().Set("Content-Type", "application/json")
 	prices, err := priceService.GetAll(request.Context())
 	if err != nil {
-		
+
 	}
 	logs.Instance.Log.Debug(request.Context(), "prices request success")
 	response.WriteHeader(http.StatusOK)
