@@ -22,7 +22,7 @@ It is possible to create an account, deposit, withdraw, view the history given a
 To update the prices of the currencies there are two implementations to choose from. 
 [CoinGecko API](https://www.coingecko.com/en/api) or [CoinBase API](https://developers.coinbase.com/api/v2).
 
-## Requirement (run in Docker)
+## Requirements (run in Docker)
 
 You must have installed [Docker](https://www.docker.com/).
 
@@ -31,10 +31,10 @@ You must have installed [Docker](https://www.docker.com/).
 # Access the project folder
 $ cd daxxer-api
 
-# Run the script build the app's docker image, download dependencies
-$ ./scripts/build.sh
+# Run to set envs
+$ ./scripts/setup.sh
 
-# Run the application 
+# Run the script to build the app's docker image, download dependencies and run the app
 $ ./scripts/run.sh
 ```
 

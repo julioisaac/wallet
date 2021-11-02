@@ -31,8 +31,7 @@ var (
 	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository(db, os.Getenv("MONGODB_COL_CURRENCIES"))
 	pricesRepo   repository.DBRepository = mongodb2.NewMongodbRepository(db, os.Getenv("MONGODB_COL_PRICES"))
 	apiRepo            api.ApiRepository = api.NewCoinGeckoApiRepo(metrics.Metric().GetClient())
-
-	pricesApiService                   = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
+	pricesApiService                   	 = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
 	healthCheck                                         = pkg.NewHealthCheck()
 	pricesController                                    = controller2.NewPricesController()
@@ -71,6 +70,5 @@ func main() {
 	httpRouter.GET("/crypto-currency", cryptoCurrencyController.GetById)
 	httpRouter.GET("/crypto-currencies", cryptoCurrencyController.GetAll)
 
-	//app port config or env
 	httpRouter.SERVE(":8000")
 }
