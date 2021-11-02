@@ -17,25 +17,26 @@ import (
 	controller2 "github.com/julioisaac/daxxer-api/src/wallet/prices/controller"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
+	"os"
 )
 
 var (
-	logConfig  logs.ILog         = logs.NewZapLogger()
-	dbConfig   database.DBConfig = mongodb.NewMongoConfig()
-	httpRouter routers.Router    = gin.NewGinRouter()
-	daxxerTicker      = ticker.NewDaxxerTicker()
+	logConfig    logs.ILog         = logs.NewZapLogger()
+	dbConfig     database.DBConfig = mongodb.NewMongoConfig()
+	httpRouter   routers.Router    = gin.NewGinRouter()
+	daxxerTicker                   = ticker.NewDaxxerTicker()
 
-	//db name and collections config or env
-	cryptoRepo repository.DBRepository  = mongodb2.NewMongodbRepository("daxxer", "cryptoCurrencies")
-	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "currencies")
-	pricesRepo  repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "prices")
-	// url and timeout in config or env
-	apiRepo  api.ApiRepository = api.NewCoinGeckoApiRepo(metrics.Metric().GetClient())
-	pricesApiService  = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
+	db                                   = os.Getenv("MONGODB_DB")
+	cryptoRepo   repository.DBRepository = mongodb2.NewMongodbRepository(db, os.Getenv("MONGODB_COL_CRYPTO_CURRENCIES"))
+	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository(db, os.Getenv("MONGODB_COL_CURRENCIES"))
+	pricesRepo   repository.DBRepository = mongodb2.NewMongodbRepository(db, os.Getenv("MONGODB_COL_PRICES"))
+	apiRepo            api.ApiRepository = api.NewCoinGeckoApiRepo(metrics.Metric().GetClient())
+
+	pricesApiService                   = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
 	healthCheck                                         = pkg.NewHealthCheck()
-	pricesController									= controller2.NewPricesController()
-	accountController 									= controller.NewAccountController()
+	pricesController                                    = controller2.NewPricesController()
+	accountController                                   = controller.NewAccountController()
 	currencyController       currencies.CurrencyHandler = currencies.NewCurrencyController()
 	cryptoCurrencyController currencies.CurrencyHandler = currencies.NewCryptoCurrencyController()
 )
