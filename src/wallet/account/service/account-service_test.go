@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	mockAccountRepo repository.MockDBRepository
+	mockAccountRepo        repository.MockDBRepository
 	mockCryptoCurrencyRepo repository.MockDBRepository
-	mockHistoryRepo repository.MockDBRepository
-	mockPricesRepo repository.MockDBRepository
+	mockHistoryRepo        repository.MockDBRepository
+	mockPricesRepo         repository.MockDBRepository
 )
 
 type AccountServiceTestSuite struct {
@@ -52,7 +52,6 @@ func (suite *AccountServiceTestSuite) TestAccountExistsWhenCreate() {
 	suite.Error(err, "the account already exists")
 }
 
-
 func (suite *AccountServiceTestSuite) TestSuccessWhenCreate() {
 	//given
 	ctx := context.TODO()
@@ -60,7 +59,7 @@ func (suite *AccountServiceTestSuite) TestSuccessWhenCreate() {
 
 	//when
 	mockAccountRepo.On("FindOne", ctx, `{"username": "gabi"}`, &entity.Account{}).Return(nil)
-	mockAccountRepo.On("Insert",  ctx, &entity.Account{UserName: "gabi"}).Return(nil)
+	mockAccountRepo.On("Insert", ctx, &entity.Account{UserName: "gabi"}).Return(nil)
 
 	//expected
 	err := suite.accountService.Create(ctx, &incomingAccount)
@@ -203,11 +202,11 @@ func (suite *AccountServiceTestSuite) TestSuccessBalance() {
 		ByCrypto: []entity.BalanceByCrypto{
 			{
 				Currency: "btc",
-				Amount: 0.6,
+				Amount:   0.6,
 				Prices: map[string]float64{
 					"eur": 5266, "usd": 61227.755,
 				},
-				TimeOfRate: time.Date(2020, time.October, 31, 6, 30, 01, 0, time.UTC),
+				TimeOfRate:     time.Date(2020, time.October, 31, 6, 30, 01, 0, time.UTC),
 				ExchangeDataBy: "CoinGecko",
 				TotalByCurrency: map[string]float64{
 					"eur": 3159.6, "usd": 36736.653,
@@ -265,7 +264,6 @@ func (suite *AccountServiceTestSuite) TestErrorBalance() {
 	suite.Nil(balances)
 }
 
-
 func (suite *AccountServiceTestSuite) TestSuccessHistories() {
 	//given
 	ctx := context.TODO()
@@ -279,7 +277,7 @@ func (suite *AccountServiceTestSuite) TestSuccessHistories() {
 	var expectedHistories []interface{}
 	expectedHistories = append(expectedHistories, entity.History{
 		UserName: "ravi",
-		Type: "deposit",
+		Type:     "deposit",
 		Amount: entity.Amount{
 			Id:       "bitcoin",
 			Currency: "btc",
@@ -289,7 +287,7 @@ func (suite *AccountServiceTestSuite) TestSuccessHistories() {
 	})
 	expectedHistories = append(expectedHistories, entity.History{
 		UserName: "ravi",
-		Type: "withdraw",
+		Type:     "withdraw",
 		Amount: entity.Amount{
 			Id:       "bitcoin",
 			Currency: "btc",

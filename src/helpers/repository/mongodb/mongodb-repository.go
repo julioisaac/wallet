@@ -87,16 +87,19 @@ func (r *MongoRepository) FindAll(ctx context.Context, Skip, Limit, sort int, qu
 
 func (r *MongoRepository) FindOne(ctx context.Context, query string, response interface{}) error {
 	client := mongodb.DB.Mongo
-	collection, _ := client.Database(r.database).Collection(r.collection).Clone()
+	collection, err := client.Database(r.database).Collection(r.collection).Clone()
+	if err != nil {
+		return err
+	}
 	var filter interface{}
-	err := bson.UnmarshalExtJSON([]byte(query), true, &filter)
+	err = bson.UnmarshalExtJSON([]byte(query), true, &filter)
 	if err != nil {
 		logs.Instance.Log.Error(ctx, "error converting query to mongodb", zap.Error(err))
 		return err
 	}
-	if err1 := collection.FindOne(ctx, filter).Decode(response); err != nil {
-		logs.Instance.Log.Error(ctx, "error finding from mongodb", zap.Error(err1))
-		return err1
+	if err = collection.FindOne(ctx, filter).Decode(response); err != nil {
+		logs.Instance.Log.Error(ctx, "error finding from mongodb", zap.Error(err))
+		return err
 	}
 	logs.Instance.Log.Debug(ctx, "successfully found one from mongodb")
 	return nil

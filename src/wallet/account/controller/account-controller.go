@@ -14,14 +14,14 @@ import (
 )
 
 var (
-	accountRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "account")
-	cryptoRepo repository.DBRepository  = mongodb.NewMongodbRepository("daxxer", "crypto_currencies")
-	historyRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "history")
-	pricesRepo  repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
-	accountService = service.NewAccountService(accountRepo, cryptoRepo, historyRepo, pricesRepo)
+	accountRepo    repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "account")
+	cryptoRepo     repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "crypto_currencies")
+	historyRepo    repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "history")
+	pricesRepo     repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
+	accountService                         = service.NewAccountService(accountRepo, cryptoRepo, historyRepo, pricesRepo)
 )
 
-type controller struct {}
+type controller struct{}
 
 func NewAccountController() *controller {
 	return &controller{}
@@ -34,7 +34,7 @@ func (*controller) Create(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "error trying decode account create")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte(`{error: Error trying decode}`))
+		response.Write([]byte(`{"error": "Error trying decode"}`))
 		return
 	}
 	err = accountService.Create(request.Context(), &account)
@@ -66,9 +66,14 @@ func (*controller) Deposit(response http.ResponseWriter, request *http.Request) 
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "deposit success user: "+transaction.UserName+" currency: "+transaction.Amount.Currency+" amount: "+fmt.Sprintf("%v", transaction.Amount.Value))
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(transaction)
+	err = json.NewEncoder(response).Encode(transaction)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying encode account: "+transaction.UserName)
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "deposit success user: "+transaction.UserName+" currency: "+transaction.Amount.Currency+" amount: "+fmt.Sprintf("%v", transaction.Amount.Value))
+
 }
 
 func (*controller) Withdraw(response http.ResponseWriter, request *http.Request) {
@@ -88,9 +93,13 @@ func (*controller) Withdraw(response http.ResponseWriter, request *http.Request)
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "withdraw success user: "+transaction.UserName+" currency: "+transaction.Amount.Currency+" amount: "+fmt.Sprintf("%v", transaction.Amount.Value))
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(transaction)
+	err = json.NewEncoder(response).Encode(transaction)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying encode account: "+transaction.UserName)
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "withdraw success user: "+transaction.UserName+" currency: "+transaction.Amount.Currency+" amount: "+fmt.Sprintf("%v", transaction.Amount.Value))
 }
 
 func (*controller) Balance(response http.ResponseWriter, request *http.Request) {
@@ -103,11 +112,14 @@ func (*controller) Balance(response http.ResponseWriter, request *http.Request) 
 		response.Write([]byte("no balance found for this user"))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "balance success user: "+user)
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(amounts)
+	err := json.NewEncoder(response).Encode(amounts)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying do encode user: "+user)
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "balance success user: "+user)
 }
-
 
 func (*controller) History(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
@@ -149,8 +161,12 @@ func (*controller) History(response http.ResponseWriter, request *http.Request) 
 	}
 
 	histories := accountService.Histories(request.Context(), user, page, limit, 1, startDt, endDt)
-	logs.Instance.Log.Debug(request.Context(), "history request success user: "+user)
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(histories)
-}
+	err = json.NewEncoder(response).Encode(histories)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying to encode "+user)
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "history request success user: "+user)
 
+}

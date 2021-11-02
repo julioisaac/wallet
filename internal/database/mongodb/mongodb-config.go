@@ -34,9 +34,9 @@ func (m *mongoConfig) getConnect() *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(URI).SetMaxPoolSize(20))
-	logs.Instance.Log.Debug(context.Background(), "mongodb connection created")
 	if err != nil {
 		logs.Instance.Log.Error(context.Background(), "error trying to create mongodb connection", zap.Error(err))
 	}
+	logs.Instance.Log.Debug(context.Background(), "mongodb connection created")
 	return client
 }

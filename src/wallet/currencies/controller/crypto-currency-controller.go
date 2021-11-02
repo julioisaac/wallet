@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	cryptoRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "crypto_currencies")
-	cryptoService = service.NewCryptoCurrencyService(cryptoRepo)
+	cryptoRepo    repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "crypto_currencies")
+	cryptoService                         = service.NewCryptoCurrencyService(cryptoRepo)
 )
 
-type cryptoController struct {}
+type cryptoController struct{}
 
 func NewCryptoCurrencyController() CurrencyHandler {
 	return &cryptoController{}
@@ -45,9 +45,13 @@ func (c *cryptoController) Upsert(response http.ResponseWriter, request *http.Re
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "crypto currency: "+crypto.Symbol+" successfully created")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(crypto)
+	err = json.NewEncoder(response).Encode(crypto)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying to encode crypto")
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "crypto currency: "+crypto.Symbol+" successfully created")
 }
 
 func (c *cryptoController) Delete(response http.ResponseWriter, request *http.Request) {
@@ -60,9 +64,13 @@ func (c *cryptoController) Delete(response http.ResponseWriter, request *http.Re
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "crypto currency: "+id+" successfully deleted")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(currencies)
+	err = json.NewEncoder(response).Encode(currencies)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying to encode crypto")
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "crypto currency: "+id+" successfully deleted")
 }
 
 func (c *cryptoController) GetById(response http.ResponseWriter, request *http.Request) {
@@ -75,9 +83,13 @@ func (c *cryptoController) GetById(response http.ResponseWriter, request *http.R
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "crypto currency: "+id+" successfully found")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(currencies)
+	err = json.NewEncoder(response).Encode(currencies)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying to encode crypto: "+id)
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "crypto currency: "+id+" successfully found")
 }
 
 func (c *cryptoController) GetAll(response http.ResponseWriter, request *http.Request) {
@@ -85,5 +97,11 @@ func (c *cryptoController) GetAll(response http.ResponseWriter, request *http.Re
 	cryptocurrencies := cryptoService.FindAll(request.Context())
 	logs.Instance.Log.Debug(request.Context(), "crypto currencies successfully found")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(cryptocurrencies)
+	err := json.NewEncoder(response).Encode(cryptocurrencies)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying to encode crypto")
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "crypto currencies successfully found")
+
 }
