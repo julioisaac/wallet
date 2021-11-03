@@ -17,6 +17,7 @@ import (
 	controller2 "github.com/julioisaac/daxxer-api/src/wallet/prices/controller"
 	api "github.com/julioisaac/daxxer-api/src/wallet/prices/repository"
 	"github.com/julioisaac/daxxer-api/src/wallet/prices/service"
+	"os"
 )
 
 var (
@@ -25,11 +26,16 @@ var (
 	httpRouter   routers.Router    = gin.NewGinRouter()
 	daxxerTicker                   = ticker.NewDaxxerTicker()
 
-	cryptoRepo   repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "crypto_currencies")
-	currencyRepo repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "currencies")
-	pricesRepo   repository.DBRepository = mongodb2.NewMongodbRepository("daxxer", "prices")
-	apiRepo            api.ApiRepository = api.NewCoinGeckoApiRepo(metrics.Metric().GetClient())
-	pricesApiService                   	 = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
+	db                   = os.Getenv("MONGODB_DB")
+	cryptoCollection     = os.Getenv("MONGODB_COL_CRYPTO_CURRENCIES")
+	currenciesCollection = os.Getenv("MONGODB_COL_CURRENCIES")
+	pricesCollection     = os.Getenv("MONGODB_COL_PRICES")
+
+	cryptoRepo       repository.DBRepository = mongodb2.NewMongodbRepository(db, cryptoCollection)
+	currencyRepo     repository.DBRepository = mongodb2.NewMongodbRepository(db, currenciesCollection)
+	pricesRepo       repository.DBRepository = mongodb2.NewMongodbRepository(db, pricesCollection)
+	apiRepo          api.ApiRepository       = api.NewCoinGeckoApiRepo(metrics.Metric().GetClient())
+	pricesApiService                         = service.NewApiService(cryptoRepo, currencyRepo, pricesRepo, apiRepo)
 
 	healthCheck                                         = pkg.NewHealthCheck()
 	pricesController                                    = controller2.NewPricesController()

@@ -36,8 +36,7 @@ func (s *apiService) Update(ctx context.Context) error {
 		logs.Instance.Log.Info(ctx, "no currencies to update")
 		return errors.New("no currencies to update")
 	}
-	// log info updating prices {time} from {externalService}
-	fmt.Printf("update prices %s\n", time.Now())
+	fmt.Printf("update prices %s", time.Now())
 	prices, err := s.apiRepo.GetPrices(&cryptoCurrencies, &currencies)
 	if err != nil {
 		return errors2.Wrap(err, "error trying to get prices")

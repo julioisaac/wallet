@@ -24,13 +24,13 @@ type AccountService interface {
 }
 
 type accountService struct {
-	accountRepo repository.DBRepository
+	accountRepo        repository.DBRepository
 	cryptoCurrencyRepo repository.DBRepository
-	historyRepo repository.DBRepository
-	pricesRepo  repository.DBRepository
+	historyRepo        repository.DBRepository
+	pricesRepo         repository.DBRepository
 }
 
-func NewAccountService(accountRepo, cryptoCurrencyRepo, historyRepo, pricesRepo repository.DBRepository) AccountService  {
+func NewAccountService(accountRepo, cryptoCurrencyRepo, historyRepo, pricesRepo repository.DBRepository) AccountService {
 	return &accountService{accountRepo, cryptoCurrencyRepo, historyRepo, pricesRepo}
 }
 
@@ -39,7 +39,7 @@ func (s *accountService) Create(ctx context.Context, account *entity.Account) er
 	var query = utils2.QueryUtil().Build("username", account.UserName)
 	_ = s.accountRepo.FindOne(ctx, query, &storedAccount)
 	if storedAccount.UserName != "" {
-		logs.Instance.Log.Warn(ctx, "the account: '"+ account.UserName+"' already exists")
+		logs.Instance.Log.Warn(ctx, "the account: '"+account.UserName+"' already exists")
 		err := errors.New("the account already exists")
 		return err
 	}
@@ -48,11 +48,11 @@ func (s *accountService) Create(ctx context.Context, account *entity.Account) er
 
 func (s *accountService) Deposit(ctx context.Context, transaction *entity.Transaction) error {
 	var cryptoCurrency = entity3.CryptoCurrency{}
-	var queryCrypto = utils2.QueryUtil().Build("Symbol", transaction.Amount.Currency)
+	var queryCrypto = utils2.QueryUtil().Build("symbol", transaction.Amount.Currency)
 	err := s.cryptoCurrencyRepo.FindOne(ctx, queryCrypto, &cryptoCurrency)
 	if err != nil {
 		logs.Instance.Log.Warn(ctx, transaction.Amount.Currency+" is not supported yet", zap.Error(err))
-		return errors.New(transaction.Amount.Currency+" is not supported yet")
+		return errors.New(transaction.Amount.Currency + " is not supported yet")
 	}
 
 	var account = entity.Account{}
@@ -80,10 +80,10 @@ func (s *accountService) Withdraw(ctx context.Context, transaction *entity.Trans
 		logs.Instance.Log.Warn(ctx, "account: '"+transaction.UserName+"'  not found", zap.Error(err))
 		return errors.New("account not found")
 	}
-	err1 := s.execTransaction(ctx, account.Withdraw, transaction)
-	if err1 != nil {
-		logs.Instance.Log.Error(ctx, "error trying to execute withdraw from account"+transaction.UserName, zap.Error(err1))
-		return err1
+	err = s.execTransaction(ctx, account.Withdraw, transaction)
+	if err != nil {
+		logs.Instance.Log.Error(ctx, "error trying to execute withdraw from account"+transaction.UserName, zap.Error(err))
+		return err
 	}
 
 	return nil
@@ -91,7 +91,7 @@ func (s *accountService) Withdraw(ctx context.Context, transaction *entity.Trans
 
 func (s *accountService) Histories(ctx context.Context, user string, page, limit int, sort int, startDate time.Time, endDate time.Time) []interface{} {
 	var endDt = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, endDate.Nanosecond(), endDate.Location())
-	var query = bson.M{ "eventtime": bson.M{ "$gte": startDate, "$lte": endDt }, "username": user}
+	var query = bson.M{"eventtime": bson.M{"$gte": startDate, "$lte": endDt}, "username": user}
 	var histories = s.historyRepo.FindAll(ctx, page, limit, sort, query, new(entity.History))
 	logs.Instance.Log.Debug(ctx, "returning histories from account: "+user)
 	return histories
@@ -117,7 +117,7 @@ func (s *accountService) Balance(ctx context.Context, username string) *entity.B
 	}
 	total := calcTotal(byCryptos)
 
-	return buildBalances(username, byCryptos ,total)
+	return buildBalances(username, byCryptos, total)
 }
 
 func (s *accountService) execTransaction(ctx context.Context, operation func(context.Context, entity.Amount) (*entity.Account, error), transaction *entity.Transaction) error {
@@ -182,19 +182,19 @@ func calcTotalByCurrency(currencies map[string]float64, amountValue float64) map
 
 func buildBalanceByCrypto(price entity2.Price, amount entity.Amount, totalByCurrency map[string]float64) entity.BalanceByCrypto {
 	return entity.BalanceByCrypto{
-		Currency: amount.Currency,
-		Amount: amount.Value,
-		ExchangeDataBy: price.ExchangeDataBy,
-		Prices: price.Currencies,
-		TimeOfRate: price.LastUpdate,
+		Currency:        amount.Currency,
+		Amount:          amount.Value,
+		ExchangeDataBy:  price.ExchangeDataBy,
+		Prices:          price.Currencies,
+		TimeOfRate:      price.LastUpdate,
 		TotalByCurrency: totalByCurrency,
 	}
 }
 
-func buildBalances(user string, byCryptos []entity.BalanceByCrypto, total map[string]float64) *entity.Balances{
+func buildBalances(user string, byCryptos []entity.BalanceByCrypto, total map[string]float64) *entity.Balances {
 	return &entity.Balances{
-		User: user,
+		User:     user,
 		ByCrypto: byCryptos,
-		Total: total,
+		Total:    total,
 	}
 }

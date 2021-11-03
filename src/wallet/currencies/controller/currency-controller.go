@@ -8,14 +8,16 @@ import (
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/entity"
 	"github.com/julioisaac/daxxer-api/src/wallet/currencies/service"
 	"net/http"
+	"os"
 )
 
 var (
-	currencyRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "currencies")
-	currencyService = service.NewCurrencyService(currencyRepo)
+	currenciesCollection                         = os.Getenv("MONGODB_COL_CURRENCIES")
+	currencyRepo         repository.DBRepository = mongodb.NewMongodbRepository(db, currenciesCollection)
+	currencyService                              = service.NewCurrencyService(currencyRepo)
 )
 
-type currencyController struct {}
+type currencyController struct{}
 
 func NewCurrencyController() CurrencyHandler {
 	return &currencyController{}
@@ -28,7 +30,7 @@ func (c *currencyController) Upsert(response http.ResponseWriter, request *http.
 	if err != nil {
 		logs.Instance.Log.Error(request.Context(), "error trying decode currency upsert")
 		response.WriteHeader(http.StatusBadRequest)
-		response.Write([]byte(`{error: Error trying decode}`))
+		response.Write([]byte(`{"error": ""Error trying decode"}`))
 		return
 	}
 	err = currencyService.Validate(request.Context(), &currency)
@@ -45,9 +47,13 @@ func (c *currencyController) Upsert(response http.ResponseWriter, request *http.
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "currency: "+currency.Name+" successfully created")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(currency)
+	err = json.NewEncoder(response).Encode(currency)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying encode currency")
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "currency: "+currency.Name+" successfully created")
 }
 
 func (c *currencyController) Delete(response http.ResponseWriter, request *http.Request) {
@@ -60,9 +66,13 @@ func (c *currencyController) Delete(response http.ResponseWriter, request *http.
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "currency: "+id+" successfully deleted")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(currencies)
+	err = json.NewEncoder(response).Encode(currencies)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying to encode currency")
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "currency: "+id+" successfully deleted")
 }
 
 func (c *currencyController) GetById(response http.ResponseWriter, request *http.Request) {
@@ -75,15 +85,23 @@ func (c *currencyController) GetById(response http.ResponseWriter, request *http
 		response.Write([]byte(err.Error()))
 		return
 	}
-	logs.Instance.Log.Debug(request.Context(), "currency: "+id+" successfully found")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(currencies)
+	err = json.NewEncoder(response).Encode(currencies)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying to encode")
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "currency: "+id+" successfully found")
 }
 
 func (c *currencyController) GetAll(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
 	currencies := currencyService.FindAll(request.Context())
-	logs.Instance.Log.Debug(request.Context(), "currencies successfully found")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(currencies)
+	err := json.NewEncoder(response).Encode(currencies)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error trying to encode")
+		return
+	}
+	logs.Instance.Log.Debug(request.Context(), "currencies successfully found")
 }

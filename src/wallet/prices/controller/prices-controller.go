@@ -5,24 +5,34 @@ import (
 	"github.com/julioisaac/daxxer-api/internal/logs"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository"
 	"github.com/julioisaac/daxxer-api/src/helpers/repository/mongodb"
-	service2 "github.com/julioisaac/daxxer-api/src/wallet/prices/service"
+	pricesService "github.com/julioisaac/daxxer-api/src/wallet/prices/service"
+	"go.uber.org/zap"
 	"net/http"
+	"os"
 )
 
 var (
-	priceRepo repository.DBRepository = mongodb.NewMongodbRepository("daxxer", "prices")
-	priceService = service2.NewPricesService(priceRepo)
+	db                                       = os.Getenv("MONGODB_DB")
+	pricesCollection                         = os.Getenv("MONGODB_COL_PRICES")
+	priceRepo        repository.DBRepository = mongodb.NewMongodbRepository(db, pricesCollection)
+	priceService                             = pricesService.NewPricesService(priceRepo)
 )
 
-type pricesController struct {}
+type pricesController struct{}
 
 func NewPricesController() *pricesController {
 	return &pricesController{}
 }
 func (c *pricesController) GetAll(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
-	prices, _ := priceService.GetAll(request.Context())
+	prices, err := priceService.GetAll(request.Context())
+	if err != nil {
+
+	}
 	logs.Instance.Log.Debug(request.Context(), "prices request success")
 	response.WriteHeader(http.StatusOK)
-	json.NewEncoder(response).Encode(prices)
+	err = json.NewEncoder(response).Encode(prices)
+	if err != nil {
+		logs.Instance.Log.Error(request.Context(), "error when trying to encode prices", zap.Error(err))
+	}
 }

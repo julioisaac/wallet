@@ -1,33 +1,5 @@
 #! /bin/bash
 
-curl --location --request POST 'http://localhost:8000/create' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "user" : "ben"
-}'
-
-curl --location --request POST 'http://localhost:8000/deposit' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "user" : "ben",
-    "amount" : {
-        "id": "bitcoin",
-        "currency": "btc",
-        "value": 0.4
-    }
-}'
-
-curl --location --request POST 'http://localhost:8000/withdraw' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "user" : "ben",
-    "amount" : {
-        "id": "bitcoin",
-        "currency": "btc",
-        "value": 0.1
-    }
-}'
-
 curl --location --request POST 'http://localhost:8000/currency' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -75,4 +47,32 @@ curl --location --request POST 'http://localhost:8000/crypto-currency' \
 --data-raw '{
     "symbol" : "xrp",
     "id" : "xrp"
+}'
+
+curl --location --request POST 'http://localhost:8000/create' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "user" : "ben"
+}'
+
+curl --location --request POST 'http://localhost:8000/deposit' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "user" : "ben",
+    "amount" : {
+        "id": "bitcoin",
+        "currency": "btc",
+        "value": 0.4
+    }
+}'
+
+curl --location --request POST 'http://localhost:8000/withdraw' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "user" : "ben",
+    "amount" : {
+        "id": "bitcoin",
+        "currency": "btc",
+        "value": 0.1
+    }
 }'

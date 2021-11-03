@@ -16,7 +16,7 @@ ENV API_ENDPOINT='https://api.coingecko.com/api/v3/simple/price'
 ENV MONGODB_URI='mongodb://mongo:27017'
 ENV MONGODB_DB='daxxer'
 ENV MONGODB_COL_ACCOUNT='account'
-ENV MONGODB_COL_CRYPTO_CURRENCIES='crpyto_currencies'
+ENV MONGODB_COL_CRYPTO_CURRENCIES='crypto_currencies'
 ENV MONGODB_COL_CURRENCIES='currencies'
 ENV MONGODB_COL_PRICES='prices'
 ENV MONGODB_COL_HISTORY='history'
@@ -27,4 +27,5 @@ RUN apk --no-cache add curl
 EXPOSE 8000
 WORKDIR /root/
 COPY --from=builder /app .
+
 CMD ["./app"]
