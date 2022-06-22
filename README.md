@@ -1,17 +1,7 @@
 ```
-             ./########/            ..,,,,..           .(########(.             
-               ./########*     ,/(#############(,    ./########/.               
-                 ./#######(* *###################(. *########/.                 
-                    /##############(,..  ..,/###, ,(#######/.                   
-                      *(#########(.          .*. (#######/.                     
-                       /########.             ./#########                       
-                     ,(#######* ,#*          *############*                     
-                   ,########/..(#####/**,*/(#######(########*                   
-                 *(#######(. ./##################(,  *(#######*.                
-               *#########,      .*/(#########(*,      ./########/.              
-             .,,,,,,,,,,                                .,,,,,,,,,.    
 
-@Daxxer - Golang Challenge
+
+Wallet
 ```
 
 System responsible for managing funds and assets of a digital account. 
@@ -29,7 +19,7 @@ You must have installed [Docker](https://www.docker.com/).
 ```bash
 # Given the repository
 # Access the project folder
-$ cd daxxer-api
+$ cd wallet
 
 # Run the script to build the app's docker image, download dependencies and run the app
 $ ./scripts/run.sh
@@ -249,6 +239,6 @@ func NewCoinMarketApiRepo(client HttpClient) ApiRepository {
 ## Metrics
 ### Apache SkyWalking
 [SkyWalking](https://github.com/apache/skywalking) is an open source APM(Application Performance Monitor) system.  
-At first this project(daxxer-api) is using the tool(SkyWalking) to collect some metrics, measure latency with external service, endpoint tracing.  
+At first this project(wallet) is using the tool(SkyWalking) to collect some metrics, measure latency with external service, endpoint tracing.  
 When the application is running(by the ./scripts/run.sh) the service can be access http://localhost:9020
 ![Metrics, Tracer, Logger](./docs/skyWalking.gif "Apache SkyWalking")
