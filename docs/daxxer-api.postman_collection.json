@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "54c43d63-d26e-44bf-9b1e-99b519a9d497",
-		"name": "daxxer-api",
+		"name": "wallet-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
